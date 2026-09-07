@@ -13,9 +13,11 @@ class DisplayController extends Controller
 
     public function latest()
     {
-        return Queue::with('meja')
+        $queue = Queue::with('meja')
             ->where('status', 'called')
             ->latest('updated_at')
             ->first();
+
+        return response()->json($queue);
     }
 }

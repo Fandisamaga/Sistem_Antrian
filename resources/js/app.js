@@ -56,7 +56,7 @@ document.querySelectorAll('[data-queue-action]').forEach((form) => {
     });
 });
 
-let lastQueue = null;
+let lastCallKey = null;
 
 async function refreshDisplay() {
     const numberElement = document.querySelector('#display-number');
@@ -70,21 +70,27 @@ async function refreshDisplay() {
     });
     const queue = await response.json();
 
-    if (!queue || queue.id === lastQueue) {
+    const callKey = queue ? `${queue.id}:${queue.call_count}` : null;
+
+    if (!queue || callKey === lastCallKey) {
         return;
     }
 
-    lastQueue = queue.id;
+    lastCallKey = callKey;
     numberElement.textContent = queue.queue_number;
     document.querySelector('#display-meja').textContent = queue.meja.nama_meja;
 
     if ('speechSynthesis' in window) {
         speechSynthesis.cancel();
-        speechSynthesis.speak(
-            new SpeechSynthesisUtterance(
-                `Nomor antrean ${queue.queue_number}, silakan menuju ${queue.meja.nama_meja}`,
-            ),
+        const utterance = new SpeechSynthesisUtterance(
+            `Nomor antrean ${queue.queue_number}, silakan menuju ${queue.meja.nama_meja}`,
         );
+
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+
+        speechSynthesis.speak(utterance);
     }
 }
 

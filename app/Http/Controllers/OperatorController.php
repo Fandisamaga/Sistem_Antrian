@@ -38,11 +38,13 @@ class OperatorController extends Controller
 
         if ($action === 'call') {
             $queue->update(['status' => 'called']);
+            $queue->increment('call_count');
             event(new QueueCalled($queue->fresh('meja')));
         }
 
         if ($action === 'replay') {
-            event(new QueueCalled($queue->load('meja')));
+            $queue->increment('call_count');
+            event(new QueueCalled($queue->fresh('meja')));
         }
 
         if ($action === 'skip') {

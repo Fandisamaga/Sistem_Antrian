@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Queue extends Model
 {
-    protected $fillable = ['queue_number', 'meja_id', 'status'];
+    protected $fillable = ['queue_number', 'meja_id', 'status', 'call_count'];
 
     public function meja(): BelongsTo
     {

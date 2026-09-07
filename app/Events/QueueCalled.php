@@ -13,7 +13,7 @@ class QueueCalled implements ShouldBroadcast
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public Queue $queue)
+    public function __construct(public Queue $queueEntry)
     {
     }
 
@@ -30,8 +30,8 @@ class QueueCalled implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'queue_number' => $this->queue->queue_number,
-            'meja' => $this->queue->meja->nama_meja,
+            'queue_number' => $this->queueEntry->queue_number,
+            'meja' => $this->queueEntry->meja->nama_meja,
         ];
     }
 }
