@@ -8,7 +8,61 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-@media print { .no-print, header { display: none !important; } body { background: white !important; color: black !important; } #ticket { display: block !important; } .ticket-content { width: 72mm; padding: 7mm; display: grid; gap: 4mm; font-family: monospace; } .ticket-content strong { font-size: 22pt; } .ticket-content span:first-of-type { font-size: 34pt; font-weight: 900; } .ticket-content span:last-of-type { font-size: 16pt; } }
+@media print {
+    @page {
+        size: 72mm auto;
+        margin: 0;
+    }
 
-/* Safelist for Blade's operator action colour. */
-.queue-action-colours { @apply bg-blue-600 bg-red-600 bg-green-600; }
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    body > header,
+    body > main > * {
+        display: none !important;
+    }
+
+    body > main > #ticket {
+        display: block !important;
+    }
+
+    .ticket-content {
+        display: grid;
+        width: 72mm;
+        min-height: 72mm;
+        box-sizing: border-box;
+        align-content: start;
+        gap: 3mm;
+        padding: 9mm 6mm;
+        font-family: Arial, sans-serif;
+    }
+
+    .ticket-label {
+        margin: 0;
+        font-size: 13pt;
+        font-weight: 700;
+    }
+
+    .ticket-content strong {
+        font-size: 42pt;
+        line-height: 1;
+    }
+
+    .ticket-content p:not(.ticket-label) {
+        margin: 0;
+        font-size: 15pt;
+        font-weight: 700;
+    }
+
+    #ticket-date {
+        font-size: 10pt !important;
+        font-weight: 400 !important;
+    }
+}
+
+/* Safelist untuk warna tombol operator yang dibentuk oleh Blade. */
+.queue-action-colours {
+    @apply bg-blue-600 bg-red-600 bg-green-600;
+}
