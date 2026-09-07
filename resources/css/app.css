@@ -7,3 +7,8 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@media print { .no-print, header { display: none !important; } body { background: white !important; color: black !important; } #ticket { display: block !important; } .ticket-content { width: 72mm; padding: 7mm; display: grid; gap: 4mm; font-family: monospace; } .ticket-content strong { font-size: 22pt; } .ticket-content span:first-of-type { font-size: 34pt; font-weight: 900; } .ticket-content span:last-of-type { font-size: 16pt; } }
+
+/* Safelist for Blade's operator action colour. */
+.queue-action-colours { @apply bg-blue-600 bg-red-600 bg-green-600; }
