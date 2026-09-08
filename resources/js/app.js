@@ -58,6 +58,26 @@ document.querySelectorAll('[data-queue-action]').forEach((form) => {
 
 let lastQueue = null;
 
+function speakInIndonesian(message) {
+    if (!('speechSynthesis' in window)) {
+        return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    const indonesianVoice = speechSynthesis
+        .getVoices()
+        .find((voice) => voice.lang.toLowerCase().startsWith('id'));
+
+    utterance.lang = 'id-ID';
+
+    if (indonesianVoice) {
+        utterance.voice = indonesianVoice;
+    }
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+}
+
 async function refreshDisplay() {
     const numberElement = document.querySelector('#display-number');
 
@@ -78,14 +98,9 @@ async function refreshDisplay() {
     numberElement.textContent = queue.queue_number;
     document.querySelector('#display-meja').textContent = queue.meja.nama_meja;
 
-    if ('speechSynthesis' in window) {
-        speechSynthesis.cancel();
-        speechSynthesis.speak(
-            new SpeechSynthesisUtterance(
-                `Nomor antrean ${queue.queue_number}, silakan menuju ${queue.meja.nama_meja}`,
-            ),
-        );
-    }
+    speakInIndonesian(
+        `Nomor antrean ${queue.queue_number.replace('-', ' ')}, silakan menuju ${queue.meja.nama_meja}`,
+    );
 }
 
 if (document.querySelector('#display-number')) {
