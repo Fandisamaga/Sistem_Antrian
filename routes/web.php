@@ -16,6 +16,7 @@ Route::post('/logout', [AuthController::class, 'destroy'])
 
 Route::get('/display', [DisplayController::class, 'index'])->name('display.index');
 Route::get('/display/latest', [DisplayController::class, 'latest'])->name('display.latest');
+Route::get('/display/state', [DisplayController::class, 'state'])->name('display.state');
 
 Route::middleware(['auth', 'role:cs,admin'])->group(function () {
     Route::get('/cs', [CustomerServiceController::class, 'index'])->name('cs.index');

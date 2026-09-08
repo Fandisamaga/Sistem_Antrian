@@ -7,6 +7,12 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Display real-time
+
+Jalankan `composer run dev` untuk menyalakan aplikasi, Vite, worker antrean, dan server WebSocket Reverb sekaligus. Display di `/display` menerima panggilan baru secara langsung melalui WebSocket, lalu melakukan sinkronisasi cadangan setiap 30 detik bila koneksi sempat terputus.
+
+Untuk deployment, jalankan `php artisan reverb:start` sebagai proses layanan terpisah dan ubah `REVERB_HOST`, `REVERB_PORT`, serta `VITE_REVERB_*` ke host WebSocket yang dapat diakses browser.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
