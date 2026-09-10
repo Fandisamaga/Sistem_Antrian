@@ -147,7 +147,6 @@
             </div>
             <p id="ticket-layanan" class="text-[10px] font-bold uppercase"></p>
             <p id="ticket-date" class="text-[8px] mt-1 text-slate-700"></p>
-            <p class="text-[8px] mt-2 font-semibold">Harap menunggu hingga nomor Anda dipanggil.</p>
         </div>
     </section>
 </x-layouts.terminal>
