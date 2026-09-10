@@ -145,10 +145,48 @@ async function processAnnouncementQueue() {
         await playChime();
 
         // Eja nomor secara ramah, misal 001 -> "nol nol satu"
-        const spelledNumber = current.queue_number.split('').map(d => {
-            const map = {'0': 'nol', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat', '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan'};
-            return map[d] || d;
-        }).join(' ');
+const numberWords = [
+    'nol',
+    'satu',
+    'dua',
+    'tiga',
+    'empat',
+    'lima',
+    'enam',
+    'tujuh',
+    'delapan',
+    'sembilan',
+    'sepuluh',
+    'sebelas'
+];
+
+function numberToWords(number) {
+    number = parseInt(number, 10);
+
+    if (number < 12) {
+        return numberWords[number];
+    }
+
+    if (number < 20) {
+        return numberToWords(number - 10) + ' belas';
+    }
+
+    if (number < 100) {
+        const tens = Math.floor(number / 10);
+        const remainder = number % 10;
+
+        if (remainder === 0) {
+            return numberToWords(tens) + ' puluh';
+        }
+
+        return numberToWords(tens) + ' puluh ' + numberToWords(remainder);
+    }
+
+    return number.toString();
+}
+
+const queueNumber = parseInt(current.queue_number, 10);
+const spelledNumber = numberToWords(queueNumber);
 
         await speakText(`Nomor antrean, ${spelledNumber}, silakan menuju, ${current.meja}`);
     } catch {
@@ -359,6 +397,16 @@ if (document.querySelector('#cs-panel') && window.Echo) {
 
 // --- Operator Desk Actions & Realtime Sync ---
 const operatorContainer = document.querySelector('#operator-panel');
+
+function updateOperatorActiveQueueCount() {
+    const list = document.querySelector('#operator-queue-list');
+    const count = document.querySelector('#operator-active-queue-count');
+
+    if (list && count) {
+        count.textContent = list.querySelectorAll('.queue-row').length;
+    }
+}
+
 if (operatorContainer && window.Echo) {
     const mejaId = operatorContainer.dataset.mejaId;
 
@@ -413,6 +461,7 @@ if (operatorContainer && window.Echo) {
                 `;
                 bindQueueActions(row);
                 list.appendChild(row);
+                updateOperatorActiveQueueCount();
             }
         });
     }
@@ -431,7 +480,7 @@ function bindQueueActions(container = document) {
 
             try {
                 const response = await fetch(form.getAttribute('action'), {
-                    method: 'POST',
+                    method: 'PATCH',
                     headers: jsonHeaders,
                     body: JSON.stringify({
                         action: form.querySelector('[name="action"]').value,
@@ -459,6 +508,7 @@ function bindQueueActions(container = document) {
                         row.style.transform = 'translateX(20px)';
                         setTimeout(() => {
                             row.remove();
+                            updateOperatorActiveQueueCount();
                             const list = document.querySelector('#operator-queue-list');
                             if (list && list.children.length === 0) {
                                 document.querySelector('#operator-empty-notice')?.classList.remove('hidden');
@@ -535,16 +585,12 @@ function addWaitingQueue(queue) {
                 </span>
                 <div class="flex items-center gap-1.5 mt-0.5">
                     <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">MENUNGGU</span>
-                    ${queue.layanan ? `<span class="text-slate-400">&bull;</span><span class="text-[10px] text-slate-500 dark:text-slate-400">${queue.layanan}</span>` : ''}
                 </div>
             </div>
         </div>
         <div class="flex flex-col items-end">
             <span data-queue-meja class="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-right text-xs font-black text-emerald-700 dark:text-emerald-300 shadow-sm">
                 ${queue.meja?.nama_meja || queue.meja || '-'}
-            </span>
-            <span class="text-[10px] text-slate-400 mt-1 font-mono">
-                ${queue.created_at || 'Baru saja'}
             </span>
         </div>
     `;
