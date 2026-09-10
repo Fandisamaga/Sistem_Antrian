@@ -38,3 +38,13 @@
 - [ ] Uji skenario bentrok data (concurrency) saat CS mengklik tombol secara brutal.
 - [ ] Pastikan WebSockets berjalan lancar di jaringan lokal.
 - [ ] Bersihkan kode dan pastikan UI responsif namun terkunci dengan baik di mode fullscreen untuk TV.
+
+## Tahap selanjutnya
+- [x] buat daftar pilihan layanan untuk cs ada di wa
+- [x] buat akun untuk semua meja
+- [x] kasih nomor di tombol meja di cs
+- [x] perbaikan pada websoketnya kenapa lalot dan banyak bug
+- [x] implementasi nomer antrian sesuai meja
+- [x] perbaikan database untuk pencatatan antrian yg nantinya bisa jadi arsip dan di print jadi laporan 
+- [x] jadi si arsipnya ini kita buat juga bisa melihat kinerja masing masing operatornya
+- [x] buat super admin

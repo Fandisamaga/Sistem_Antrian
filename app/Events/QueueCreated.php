@@ -8,7 +8,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class QueueCalled implements ShouldBroadcastNow
+class QueueCreated implements ShouldBroadcastNow
 {
     use Dispatchable;
     use SerializesModels;
@@ -25,18 +25,20 @@ class QueueCalled implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'QueueCalled';
+        return 'QueueCreated';
     }
 
     public function broadcastWith(): array
     {
         return [
-            'queue_id' => $this->queue->id,
+            'id' => $this->queue->id,
             'queue_number' => $this->queue->queue_number,
-            'meja' => $this->queue->meja?->nama_meja,
             'meja_id' => $this->queue->meja_id,
-            'nomor_meja' => $this->queue->meja?->nomor_meja,
+            'meja' => $this->queue->meja?->nama_meja,
             'layanan' => $this->queue->layanan?->nama_layanan,
+            'status' => $this->queue->status,
+            'created_at' => $this->queue->created_at->format('H:i:s'),
         ];
     }
 }
+

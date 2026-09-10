@@ -27,9 +27,14 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(
-            Auth::user()->role === 'operator' ? route('operator.index') : route('cs.index'),
-        );
+        $user = Auth::user();
+        $targetRoute = match ($user->role) {
+            'admin' => route('admin.dashboard'),
+            'operator' => route('operator.index'),
+            default => route('cs.index'),
+        };
+
+        return redirect()->intended($targetRoute);
     }
 
     public function destroy(Request $request)
