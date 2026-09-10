@@ -114,7 +114,7 @@ class AdminManagementTest extends TestCase
 
     public function test_cs_can_view_mejas_and_create_ticket(): void
     {
-        $layanan = Layanan::create(['nama_layanan' => 'KTP', 'kode_layanan' => 'KTP']);
+        $layanan = Layanan::firstOrCreate(['kode_layanan' => 'KK'], ['nama_layanan' => 'Kartu Keluarga']);
         $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01', 'layanan_id' => $layanan->id]);
         $cs = User::factory()->create(['role' => 'cs']);
 
@@ -128,7 +128,7 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('queue.queue_number', '001')
             ->assertJsonPath('meja', 'Meja 01')
             ->assertJsonPath('nomor_meja', 1)
-            ->assertJsonPath('layanan', 'KTP');
+            ->assertJsonPath('layanan', 'Kartu Keluarga');
     }
 
     public function test_reports_show_operator_performance_stats(): void
@@ -147,5 +147,71 @@ class AdminManagementTest extends TestCase
         $response->assertOk()
             ->assertSee('Operator Hebat')
             ->assertSee('100%');
+    }
+
+    public function test_reports_support_preset_periods_and_breakdowns(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $layanan = Layanan::firstOrCreate(['kode_layanan' => 'KK'], ['nama_layanan' => 'Kartu Keluarga']);
+        $meja = Meja::create(['nomor_meja' => 2, 'nama_meja' => 'Meja 02']);
+        $operator = User::factory()->create(['name' => 'Operator Dua', 'role' => 'operator', 'meja_id' => $meja->id]);
+
+        $queue = Queue::create([
+            'queue_number' => '001',
+            'queue_date' => Carbon::today()->toDateString(),
+            'meja_id' => $meja->id,
+            'layanan_id' => $layanan->id,
+            'operator_id' => $operator->id,
+            'status' => 'completed',
+            'wait_duration' => 60,
+            'serve_duration' => 180,
+            'called_at' => Carbon::now()->subMinutes(3),
+            'completed_at' => Carbon::now(),
+        ]);
+
+        // Preset today
+        $this->actingAs($admin)->get(route('admin.reports.index', ['periode' => 'today']))
+            ->assertOk()
+            ->assertSee('Kartu Keluarga')
+            ->assertSee('Meja 02')
+            ->assertSee('Operator Dua');
+
+        // Preset week
+        $this->actingAs($admin)->get(route('admin.reports.index', ['periode' => 'week']))
+            ->assertOk()
+            ->assertSee('Minggu Ini');
+
+        // Preset month
+        $this->actingAs($admin)->get(route('admin.reports.index', ['periode' => 'month']))
+            ->assertOk()
+            ->assertSee('Bulan Ini');
+
+        // Print view
+        $this->actingAs($admin)->get(route('admin.reports.print', ['periode' => 'today']))
+            ->assertOk()
+            ->assertSee('Kartu Keluarga')
+            ->assertSee('Meja 02')
+            ->assertSee('Operator Dua');
+    }
+
+    public function test_dashboard_displays_realtime_desk_and_service_monitoring(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $layanan = Layanan::firstOrCreate(['kode_layanan' => 'AK-LHR'], ['nama_layanan' => 'Akta Kelahiran']);
+        $meja = Meja::create(['nomor_meja' => 3, 'nama_meja' => 'Meja 03']);
+
+        Queue::create([
+            'queue_number' => '001',
+            'queue_date' => Carbon::today()->toDateString(),
+            'meja_id' => $meja->id,
+            'layanan_id' => $layanan->id,
+            'status' => 'waiting',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+        $response->assertOk()
+            ->assertSee('Akta Kelahiran')
+            ->assertSee('Meja 03')
+            ->assertSee('1 Antre');
     }
 }

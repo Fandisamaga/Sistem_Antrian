@@ -31,7 +31,7 @@
                     </span>
                 </div>
 
-                <div id="layanan-selector-grid" class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-6">
+                <div id="layanan-selector-grid" class="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4">
                     @foreach ($layanans as $index => $layanan)
                         <button type="button"
                                 data-layanan-option

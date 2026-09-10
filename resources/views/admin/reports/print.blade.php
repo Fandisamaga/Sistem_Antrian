@@ -148,12 +148,12 @@
 
     <!-- Judul Laporan -->
     <div class="judul-laporan">
-        <h3>Laporan Rekapitulasi Pelayanan Antrean & Kinerja Petugas Operator</h3>
-        <p>Periode: <strong>{{ \Carbon\Carbon::parse($dateFrom)->translatedFormat('d F Y') }}</strong> s/d <strong>{{ \Carbon\Carbon::parse($dateTo)->translatedFormat('d F Y') }}</strong></p>
+        <h3>Laporan Rekapitulasi Pelayanan Antrean & Kinerja Operasional</h3>
+        <p>Periode: <strong>{{ $periodeLabel }}</strong></p>
     </div>
 
     <!-- Ringkasan Statistik -->
-    <div class="summary-box">
+    <div class="summary-box" style="grid-template-columns: repeat(5, 1fr);">
         <div class="summary-item">
             <div class="label">Total Antrean</div>
             <div class="value">{{ $totalPeriod }}</div>
@@ -163,17 +163,95 @@
             <div class="value">{{ $completedPeriod }}</div>
         </div>
         <div class="summary-item">
-            <div class="label">Rata-Rata Layanan</div>
+            <div class="label">Dilewati / Batal</div>
+            <div class="value">{{ $skippedPeriod }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="label">Rata2 Layanan</div>
             <div class="value">{{ $avgServeFormatted }}</div>
         </div>
         <div class="summary-item">
-            <div class="label">Rata-Rata Tunggu</div>
+            <div class="label">Rata2 Tunggu</div>
             <div class="value">{{ $avgWaitFormatted }}</div>
         </div>
     </div>
 
-    <!-- Tabel 1: Evaluasi Kinerja Operator -->
-    <h4 style="margin: 15px 0 8px; font-size: 11pt; text-transform: uppercase;">I. Evaluasi Kinerja Masing-Masing Petugas Operator Loket</h4>
+    <!-- Tabel 1: Rekapitulasi Jenis Layanan -->
+    <h4 style="margin: 15px 0 8px; font-size: 11pt; text-transform: uppercase;">I. Rekapitulasi Berdasarkan Jenis Layanan</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30px;">No</th>
+                <th style="width: 70px;">Kode</th>
+                <th>Nama Jenis Pelayanan</th>
+                <th style="width: 80px;">Permohonan</th>
+                <th style="width: 70px;">Selesai</th>
+                <th style="width: 70px;">Dilewati</th>
+                <th style="width: 80px;">Proporsi (%)</th>
+                <th style="width: 90px;">Rata2 Layanan</th>
+                <th style="width: 90px;">Rata2 Tunggu</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($layananBreakdown as $idx => $lb)
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td class="text-center text-bold">{{ $lb['layanan']->kode_layanan }}</td>
+                    <td>{{ $lb['layanan']->nama_layanan }}</td>
+                    <td class="text-center text-bold">{{ $lb['total'] }}</td>
+                    <td class="text-center">{{ $lb['completed'] }}</td>
+                    <td class="text-center">{{ $lb['skipped'] }}</td>
+                    <td class="text-center text-bold">{{ $lb['share'] }}%</td>
+                    <td class="text-center">{{ $lb['avg_serve_formatted'] }}</td>
+                    <td class="text-center">{{ $lb['avg_wait_formatted'] }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center">Tidak ada data pelayanan pada periode ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <!-- Tabel 2: Rekapitulasi Beban Meja Loket -->
+    <h4 style="margin: 20px 0 8px; font-size: 11pt; text-transform: uppercase;">II. Distribusi Beban Meja Loket Pelayanan</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30px;">No</th>
+                <th style="width: 70px;">Nomor</th>
+                <th>Nama Meja Loket</th>
+                <th>Petugas Operator</th>
+                <th style="width: 80px;">Total Beban</th>
+                <th style="width: 70px;">Selesai</th>
+                <th style="width: 70px;">Dilewati</th>
+                <th style="width: 80px;">Beban Loket (%)</th>
+                <th style="width: 90px;">Rata2 Layanan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($mejaBreakdown as $idx => $mb)
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td class="text-center text-bold">{{ $mb['meja']->formatted_nomor }}</td>
+                    <td class="text-bold">{{ $mb['meja']->nama_meja }}</td>
+                    <td>{{ $mb['operator_name'] }}</td>
+                    <td class="text-center text-bold">{{ $mb['total'] }}</td>
+                    <td class="text-center">{{ $mb['completed'] }}</td>
+                    <td class="text-center">{{ $mb['skipped'] }}</td>
+                    <td class="text-center text-bold">{{ $mb['share'] }}%</td>
+                    <td class="text-center">{{ $mb['avg_serve_formatted'] }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center">Tidak ada data meja loket pada periode ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <!-- Tabel 3: Evaluasi Kinerja Operator -->
+    <h4 style="margin: 20px 0 8px; font-size: 11pt; text-transform: uppercase;">III. Evaluasi Kinerja Masing-Masing Petugas Operator Loket</h4>
     <table>
         <thead>
             <tr>
@@ -209,17 +287,17 @@
         </tbody>
     </table>
 
-    <!-- Tabel 2: Riwayat Log Transaksi Antrean -->
-    <h4 style="margin: 25px 0 8px; font-size: 11pt; text-transform: uppercase;">II. Arsip Log Pelayanan Antrean Terpilih</h4>
+    <!-- Tabel 4: Riwayat Log Transaksi Antrean -->
+    <h4 style="margin: 20px 0 8px; font-size: 11pt; text-transform: uppercase;">IV. Arsip Log Pelayanan Antrean Terpilih</h4>
     <table>
         <thead>
             <tr>
                 <th style="width: 30px;">No</th>
                 <th style="width: 75px;">Nomor</th>
                 <th>Waktu Ambil</th>
-                <th>Meja Loket</th>
                 <th>Jenis Pelayanan</th>
-                <th>Operator</th>
+                <th>Meja Loket</th>
+                <th>Petugas Operator</th>
                 <th style="width: 70px;">Status</th>
                 <th style="width: 75px;">Durasi Layanan</th>
             </tr>
@@ -230,8 +308,8 @@
                     <td class="text-center">{{ $i + 1 }}</td>
                     <td class="text-center text-bold">{{ $q->queue_number }}</td>
                     <td class="text-center">{{ $q->created_at->format('d/m/y H:i') }}</td>
-                    <td>{{ $q->meja?->nama_meja ?? '-' }}</td>
                     <td>{{ $q->layanan?->nama_layanan ?? '-' }}</td>
+                    <td>{{ $q->meja?->nama_meja ?? '-' }}</td>
                     <td>{{ $q->operator?->name ?? '-' }}</td>
                     <td class="text-center" style="text-transform: capitalize;">{{ $q->status }}</td>
                     <td class="text-center">{{ $q->formatted_serve_duration }}</td>

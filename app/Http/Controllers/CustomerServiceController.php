@@ -27,7 +27,7 @@ class CustomerServiceController extends Controller
             ->orderBy('nomor_meja', 'asc')
             ->get();
 
-        $layanans = Layanan::where('is_active', true)->orderBy('nama_layanan')->get();
+        $layanans = Layanan::where('is_active', true)->orderBy('id', 'asc')->get();
 
         return view('cs.index', [
             'mejas' => $mejas,

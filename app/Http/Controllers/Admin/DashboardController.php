@@ -39,6 +39,27 @@ class DashboardController extends Controller
         $totalLayanans = Layanan::where('is_active', true)->count();
         $totalOperators = User::where('role', 'operator')->count();
 
+        // Rekapitulasi Jenis Layanan Hari Ini
+        $layanansToday = Layanan::where('is_active', true)
+            ->withCount([
+                'queues as total_today' => fn ($q) => $q->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+                'queues as completed_today' => fn ($q) => $q->where('status', 'completed')->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+                'queues as waiting_today' => fn ($q) => $q->where('status', 'waiting')->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+            ])
+            ->orderByDesc('total_today')
+            ->get();
+
+        // Rekapitulasi Beban Antrean Meja Hari Ini
+        $mejasToday = Meja::with('user')
+            ->withCount([
+                'queues as total_today' => fn ($q) => $q->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+                'queues as waiting_today' => fn ($q) => $q->where('status', 'waiting')->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+                'queues as completed_today' => fn ($q) => $q->where('status', 'completed')->where(fn ($sub) => $sub->whereDate('created_at', $today)->orWhere('queue_date', $today)),
+            ])
+            ->orderByDesc('waiting_today')
+            ->orderBy('nomor_meja')
+            ->get();
+
         $recentQueues = Queue::with(['meja', 'layanan', 'operator'])
             ->where(function ($q) use ($today) {
                 $q->whereDate('created_at', $today)
@@ -60,6 +81,8 @@ class DashboardController extends Controller
             'totalLayanans' => $totalLayanans,
             'totalOperators' => $totalOperators,
             'recentQueues' => $recentQueues,
+            'layanansToday' => $layanansToday,
+            'mejasToday' => $mejasToday,
         ]);
     }
 }

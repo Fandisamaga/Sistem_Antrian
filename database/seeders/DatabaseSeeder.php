@@ -16,39 +16,53 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // 1. Buat Daftar Layanan Standar Dukcapil
+        // 1. Buat Daftar Layanan Standar Dukcapil (8 Layanan Resmi)
         $layananList = [
             [
-                'nama_layanan' => 'Perekaman & Cetak KTP-el',
-                'kode_layanan' => 'KTP',
-                'deskripsi' => 'Pelayanan perekaman biometrik baru dan cetak KTP elektronik hilang atau rusak.',
-            ],
-            [
-                'nama_layanan' => 'Kartu Keluarga (KK)',
+                'nama_layanan' => 'Kartu Keluarga',
                 'kode_layanan' => 'KK',
-                'deskripsi' => 'Penerbitan baru, penambahan anggota keluarga, serta pembaharuan data KK.',
+                'deskripsi' => 'Penerbitan baru, penambahan anggota keluarga, dan perubahan data KK.',
             ],
             [
-                'nama_layanan' => 'Akta Kelahiran & Kematian',
-                'kode_layanan' => 'AKTA',
-                'deskripsi' => 'Pencatatan sipil penerbitan kutipan akta kelahiran dan akta kematian.',
+                'nama_layanan' => 'Akta Kelahiran',
+                'kode_layanan' => 'AK-LHR',
+                'deskripsi' => 'Pencatatan kelahiran dan penerbitan kutipan akta kelahiran baru atau hilang/rusak.',
             ],
             [
-                'nama_layanan' => 'Surat Pindah & Datang',
+                'nama_layanan' => 'Akta Kematian',
+                'kode_layanan' => 'AK-KMT',
+                'deskripsi' => 'Pencatatan dan penerbitan kutipan akta kematian bagi warga.',
+            ],
+            [
+                'nama_layanan' => 'Akta Perkawinan',
+                'kode_layanan' => 'AK-KWN',
+                'deskripsi' => 'Pencatatan perkawinan non-muslim dan penerbitan kutipan akta perkawinan.',
+            ],
+            [
+                'nama_layanan' => 'Akta Perceraian',
+                'kode_layanan' => 'AK-CR',
+                'deskripsi' => 'Pencatatan putusan perceraian pengadilan dan penerbitan akta perceraian.',
+            ],
+            [
+                'nama_layanan' => 'Surat Pindah',
                 'kode_layanan' => 'PINDAH',
-                'deskripsi' => 'Surat keterangan pindah WNI antar wilayah dan kedatangan penduduk.',
+                'deskripsi' => 'Penerbitan Surat Keterangan Pindah WNI (SKPWNI) antar wilayah dan kedatangan penduduk.',
             ],
             [
-                'nama_layanan' => 'Kartu Identitas Anak (KIA)',
+                'nama_layanan' => 'Biodata Penduduk Non Permanen',
+                'kode_layanan' => 'BIO-NON',
+                'deskripsi' => 'Pendaftaran dan penerbitan bukti biodata bagi penduduk non-permanen.',
+            ],
+            [
+                'nama_layanan' => 'KIA (Kartu Identitas Anak)',
                 'kode_layanan' => 'KIA',
                 'deskripsi' => 'Penerbitan identitas resmi anak usia 0 sampai dengan 17 tahun kurang satu hari.',
             ],
-            [
-                'nama_layanan' => 'Informasi & Pengaduan',
-                'kode_layanan' => 'INFO',
-                'deskripsi' => 'Konsultasi berkas kependudukan, pemadanan NIK, dan penanganan aduan warga.',
-            ],
         ];
+
+        // Non-aktifkan layanan lama yang tidak masuk dalam 8 layanan resmi
+        $activeCodes = array_column($layananList, 'kode_layanan');
+        Layanan::whereNotIn('kode_layanan', $activeCodes)->update(['is_active' => false]);
 
         $createdLayanans = [];
         foreach ($layananList as $data) {

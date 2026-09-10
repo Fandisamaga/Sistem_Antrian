@@ -29,8 +29,20 @@
                         <a href="{{ route('admin.operators.index') }}" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 shadow-sm transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-blue-400">
                             Operator & Meja
                         </a>
+                        <div class="flex items-center gap-1.5 rounded-2xl border border-blue-200 bg-blue-50/50 p-1 dark:border-blue-900/50 dark:bg-slate-950">
+                            <span class="px-2 text-[11px] font-black uppercase text-blue-600 dark:text-blue-400">Laporan:</span>
+                            <a href="{{ route('admin.reports.index', ['periode' => 'today']) }}" class="rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-900">
+                                Hari Ini
+                            </a>
+                            <a href="{{ route('admin.reports.index', ['periode' => 'week']) }}" class="rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-900">
+                                Minggu Ini
+                            </a>
+                            <a href="{{ route('admin.reports.index', ['periode' => 'month']) }}" class="rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-900">
+                                Bulan Ini
+                            </a>
+                        </div>
                         <a href="{{ route('admin.reports.index') }}" class="rounded-2xl border border-blue-600 bg-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500">
-                            Arsip & Laporan
+                            Arsip & Analitik &rarr;
                         </a>
                     </div>
                 </div>
@@ -60,6 +72,83 @@
                     <span class="text-xs font-black text-slate-500 uppercase tracking-wider">Rata-Rata Waktu Tunggu</span>
                     <p class="mt-2 text-4xl font-black text-amber-600 dark:text-amber-400">{{ $avgWait }}</p>
                     <p class="mt-1 text-xs text-slate-400">Sebelum dipanggil loket</p>
+                </div>
+            </div>
+
+            <!-- Monitoring Beban Meja & Layanan Hari Ini -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-7">
+                <!-- Pemerataan Beban Meja Loket -->
+                <div class="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-base font-black text-slate-900 dark:text-white">Pemerataan Beban Meja Loket Hari Ini</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Status antrean menunggu dan selesai pada masing-masing meja</p>
+                        </div>
+                        <a href="{{ route('admin.operators.index') }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Kelola Meja &rarr;</a>
+                    </div>
+
+                    <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                        @forelse ($mejasToday as $m)
+                            <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-200/60 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600/10 font-mono text-xs font-black text-blue-600 dark:text-blue-400">
+                                        {{ $m->formatted_nomor }}
+                                    </span>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-900 dark:text-white">{{ $m->nama_meja }}</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $m->user?->name ?? 'Belum ada operator' }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <div class="text-right">
+                                        <span class="inline-flex items-center rounded-lg {{ $m->waiting_today > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' }} px-2 py-0.5 text-xs font-black">
+                                            {{ $m->waiting_today }} Antre
+                                        </span>
+                                    </div>
+                                    <div class="text-right text-xs">
+                                        <span class="font-bold text-slate-400">{{ $m->completed_today }} Selesai</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-center py-6 text-xs text-slate-500">Belum ada data meja loket.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Distribusi Pelayanan Hari Ini -->
+                <div class="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-base font-black text-slate-900 dark:text-white">Permohonan Layanan Hari Ini</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Jumlah tiket permohonan yang dipilih oleh CS untuk warga</p>
+                        </div>
+                        <a href="{{ route('admin.layanans.index') }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Kelola Layanan &rarr;</a>
+                    </div>
+
+                    <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                        @forelse ($layanansToday as $l)
+                            <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-200/60 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-8 w-12 items-center justify-center rounded-xl bg-indigo-600/10 font-mono text-xs font-black text-indigo-600 dark:text-indigo-400">
+                                        {{ $l->kode_layanan }}
+                                    </span>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-900 dark:text-white">{{ $l->nama_layanan }}</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $l->completed_today }} selesai dari {{ $l->total_today }} tiket</p>
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <span class="text-base font-black text-slate-900 dark:text-white">{{ $l->total_today }}</span>
+                                    <span class="text-[11px] text-slate-400 block">permohonan</span>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-center py-6 text-xs text-slate-500">Belum ada data layanan.</p>
+                        @endforelse
+                    </div>
                 </div>
             </div>
 

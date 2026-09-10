@@ -68,7 +68,7 @@
                                 <th class="py-3 px-3">Nama Petugas</th>
                                 <th class="py-3 px-3">Email Login</th>
                                 <th class="py-3 px-3">Meja Penugasan</th>
-                                <th class="py-3 px-3">Layanan Meja</th>
+                                <th class="py-3 px-3">Fleksibilitas Pelayanan</th>
                                 <th class="py-3 px-3 text-center">Hari Ini Selesai</th>
                                 <th class="py-3 px-3 text-right">Aksi</th>
                             </tr>
@@ -87,8 +87,8 @@
                                             <span class="rounded-lg bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600">Belum Ditautkan</span>
                                         @endif
                                     </td>
-                                    <td class="py-3 px-3 text-xs text-slate-500">
-                                        {{ $op->meja?->layanan?->nama_layanan ?? '-' }}
+                                    <td class="py-3 px-3 text-xs">
+                                        <span class="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">Semua Layanan (Dinamis)</span>
                                     </td>
                                     <td class="py-3 px-3 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {{ $op->today_completed ?? 0 }}
@@ -129,7 +129,7 @@
                             <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-black text-slate-500 uppercase">
                                 <th class="py-3 px-3">Nomor Meja</th>
                                 <th class="py-3 px-3">Nama Meja</th>
-                                <th class="py-3 px-3">Layanan yang Ditangani</th>
+                                <th class="py-3 px-3">Cakupan Pelayanan</th>
                                 <th class="py-3 px-3">Petugas Operator</th>
                                 <th class="py-3 px-3 text-center">Antrean Hari Ini</th>
                                 <th class="py-3 px-3 text-right">Aksi</th>
@@ -142,8 +142,8 @@
                                         {{ $meja->formatted_nomor }}
                                     </td>
                                     <td class="py-3 px-3 font-black text-slate-900 dark:text-white">{{ $meja->nama_meja }}</td>
-                                    <td class="py-3 px-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                        {{ $meja->layanan?->nama_layanan ?? 'Pelayanan Umum' }}
+                                    <td class="py-3 px-3 text-xs">
+                                        <span class="rounded-lg bg-blue-500/15 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-400">Fleksibel (Dipilih CS)</span>
                                     </td>
                                     <td class="py-3 px-3 text-xs">
                                         {{ $meja->user?->name ?? 'Belum Ada' }}
@@ -199,7 +199,7 @@
                     <select name="meja_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white">
                         <option value="">-- Pilih Meja --</option>
                         @foreach ($mejas as $m)
-                            <option value="{{ $m->id }}">{{ $m->nama_meja }} ({{ $m->formatted_nomor }}) - {{ $m->layanan?->nama_layanan ?? 'Umum' }}</option>
+                            <option value="{{ $m->id }}">{{ $m->nama_meja }} ({{ $m->formatted_nomor }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -235,13 +235,14 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">Layanan Utama Meja</label>
+                    <label class="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">Spesialisasi / Kategori Layanan (Opsional)</label>
                     <select name="layanan_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white">
-                        <option value="">-- Pelayanan Umum / Semua --</option>
+                        <option value="">-- Fleksibel / Semua Layanan (Direkomendasikan) --</option>
                         @foreach ($layanans as $l)
                             <option value="{{ $l->id }}">{{ $l->nama_layanan }} ({{ $l->kode_layanan }})</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-[11px] text-slate-400">Pilihan layanan ditentukan secara dinamis oleh petugas CS saat mencetak tiket antrean.</p>
                 </div>
 
                 <div class="flex gap-2.5 pt-3">
