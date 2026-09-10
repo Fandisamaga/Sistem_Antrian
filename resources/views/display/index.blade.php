@@ -1,7 +1,7 @@
 <x-layouts.terminal title="Display Antrian Publik - DUKCAPIL">
     <section class="flex flex-1 flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.10),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.08),transparent_35%)] p-3 dark:bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.22),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.18),transparent_35%)] sm:p-5 lg:p-6">
         <!-- Main Grid Area -->
-        <div class="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_26rem] xl:gap-6 xl:grid-cols-[minmax(0,1fr)_30rem]">
+        <div class="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] xl:gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
             <!-- Hero Board: Panggilan Utama -->
             <div id="hero-display-card" class="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-b from-white/95 to-slate-100/95 p-6 shadow-2xl shadow-blue-950/15 backdrop-blur-xl dark:border-blue-500/20 dark:from-slate-900/90 dark:to-slate-950/95 dark:shadow-blue-950/40 sm:p-8 lg:p-10">
                 <!-- Ambient Glow Backgrounds -->
@@ -107,19 +107,12 @@
                                     <span data-queue-number class="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-300 block leading-tight">{{ $queue->queue_number }}</span>
                                     <div class="flex items-center gap-1.5 mt-0.5">
                                         <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">MENUNGGU</span>
-                                        @if($queue->layanan)
-                                            <span class="text-slate-400">&bull;</span>
-                                            <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $queue->layanan->nama_layanan }}</span>
-                                        @endif
                                     </div>
                                 </div>
                             </div>
                             <div class="flex flex-col items-end">
                                 <span data-queue-meja class="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-right text-xs font-black text-emerald-700 dark:text-emerald-300 shadow-sm">
                                     {{ $queue->meja?->nama_meja ?? '-' }}
-                                </span>
-                                <span class="text-[10px] text-slate-400 mt-1 font-mono">
-                                    {{ $queue->created_at->format('H:i') }} WIB
                                 </span>
                             </div>
                         </li>

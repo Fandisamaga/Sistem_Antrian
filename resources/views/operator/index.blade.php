@@ -24,7 +24,7 @@
                     <div class="flex items-center gap-3">
                         <div class="flex flex-col items-end">
                             <span class="text-xs text-slate-500">Antrean Aktif Meja Ini</span>
-                            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ $queues->count() }}</span>
+                            <span id="operator-active-queue-count" class="text-2xl font-black text-slate-900 dark:text-white">{{ $queues->count() }}</span>
                         </div>
                     </div>
                 </div>
