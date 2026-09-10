@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\QueueCalled;
 use App\Models\Queue;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class OperatorController extends Controller
@@ -12,12 +13,19 @@ class OperatorController extends Controller
     {
         $meja = $request->user()->meja;
 
-        abort_unless($meja, 403, 'Operator belum ditautkan ke meja.');
+        abort_unless($meja, 403, 'Akun operator ini belum ditautkan ke nomor meja pelayanan.');
+
+        $today = Carbon::today()->toDateString();
 
         return view('operator.index', [
-            'meja' => $meja,
+            'meja' => $meja->load('layanan'),
             'queues' => $meja->queues()
+                ->with('layanan')
                 ->whereIn('status', ['waiting', 'called'])
+                ->where(function ($q) use ($today) {
+                    $q->whereDate('created_at', $today)
+                        ->orWhere('queue_date', $today);
+                })
                 ->oldest()
                 ->get(),
         ]);
@@ -36,21 +44,45 @@ class OperatorController extends Controller
             'action' => ['required', 'in:call,replay,skip,complete'],
         ])['action'];
 
+        $now = now();
+
         if ($action === 'call') {
-            $queue->update(['status' => 'called']);
-            event(new QueueCalled($queue->fresh('meja')));
+            $waitDuration = $queue->created_at ? (int) $queue->created_at->diffInSeconds($now) : null;
+
+            $queue->update([
+                'status' => 'called',
+                'operator_id' => $user->id,
+                'called_at' => $now,
+                'wait_duration' => $waitDuration,
+            ]);
+
+            event(new QueueCalled($queue->fresh(['meja', 'layanan'])));
         }
 
         if ($action === 'replay') {
-            event(new QueueCalled($queue->load('meja')));
+            event(new QueueCalled($queue->load(['meja', 'layanan'])));
         }
 
         if ($action === 'skip') {
-            $queue->update(['status' => 'skipped']);
+            $serveDuration = $queue->called_at ? (int) $queue->called_at->diffInSeconds($now) : null;
+
+            $queue->update([
+                'status' => 'skipped',
+                'operator_id' => $user->id,
+                'completed_at' => $now,
+                'serve_duration' => $serveDuration,
+            ]);
         }
 
         if ($action === 'complete') {
-            $queue->update(['status' => 'completed']);
+            $serveDuration = $queue->called_at ? (int) $queue->called_at->diffInSeconds($now) : null;
+
+            $queue->update([
+                'status' => 'completed',
+                'operator_id' => $user->id,
+                'completed_at' => $now,
+                'serve_duration' => $serveDuration,
+            ]);
         }
 
         return $request->expectsJson()

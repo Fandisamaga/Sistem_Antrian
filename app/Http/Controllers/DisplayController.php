@@ -3,43 +3,57 @@
 namespace App\Http\Controllers;
 
 use App\Models\Queue;
+use Carbon\Carbon;
 
 class DisplayController extends Controller
 {
     public function index()
     {
-        $calledQueues = $this->calledQueues();
-
         return view('display.index', [
-            'calledQueues' => $calledQueues,
-            'latestQueue' => $calledQueues->first(),
+            'waitingQueues' => $this->waitingQueues(),
+            'latestQueue' => $this->latestCalledQueue(),
         ]);
     }
 
     public function latest()
     {
-        return Queue::with('meja')
-            ->where('status', 'called')
-            ->latest('updated_at')
-            ->first();
+        return $this->latestCalledQueue();
     }
 
     public function state()
     {
-        $calledQueues = $this->calledQueues();
-
         return response()->json([
-            'latest' => $calledQueues->first(),
-            'called' => $calledQueues,
+            'latest' => $this->latestCalledQueue(),
+            'waiting' => $this->waitingQueues(),
         ]);
     }
 
-    private function calledQueues()
+    private function waitingQueues()
     {
-        return Queue::with('meja')
-            ->where('status', 'called')
-            ->latest('updated_at')
-            ->latest('id')
+        $today = Carbon::today()->toDateString();
+
+        return Queue::with(['meja', 'layanan'])
+            ->where('status', 'waiting')
+            ->where(function ($q) use ($today) {
+                $q->whereDate('created_at', $today)
+                    ->orWhere('queue_date', $today);
+            })
+            ->oldest('id')
             ->get();
+    }
+
+    private function latestCalledQueue()
+    {
+        $today = Carbon::today()->toDateString();
+
+        return Queue::with(['meja', 'layanan'])
+            ->where('status', 'called')
+            ->where(function ($q) use ($today) {
+                $q->whereDate('created_at', $today)
+                    ->orWhere('queue_date', $today);
+            })
+            ->latest('called_at')
+            ->latest('updated_at')
+            ->first();
     }
 }

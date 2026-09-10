@@ -53,6 +53,9 @@
                                 {{ $latestQueue?->meja?->nama_meja ?? 'MENUNGGU PANGGILAN' }}
                             </span>
                         </div>
+                        <p id="display-layanan" class="mt-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {{ $latestQueue?->layanan?->nama_layanan ?? '' }}
+                        </p>
                     </div>
                 </div>
 
@@ -67,47 +70,58 @@
                 </div>
             </div>
 
-            <!-- Side Panel: Antrean Terpanggil -->
+            <!-- Side Panel: Seluruh Daftar Antrean Menunggu -->
             <aside class="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-300/30 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-slate-950/50">
                 <div class="border-b border-slate-200 bg-gradient-to-r from-white via-slate-100 to-white px-6 py-5 dark:border-slate-800 dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900">
                     <div class="flex items-center justify-between">
                         <div>
-                            <span class="text-[11px] font-black tracking-widest text-blue-400 uppercase">STATUS PELAYANAN</span>
-                            <h2 class="text-xl font-black text-slate-900 dark:text-white">Antrean Terpanggil</h2>
+                            <span class="text-[11px] font-black tracking-widest text-blue-500 uppercase dark:text-blue-400">STATUS PELAYANAN</span>
+                            <h2 class="text-xl font-black text-slate-900 dark:text-white">Daftar Antrean Menunggu</h2>
                         </div>
-                        <span class="flex h-8 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 text-xs font-black text-emerald-300">
-                            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                            LOKET AKTIF
+                        <span id="waiting-count-badge" class="flex h-8 items-center gap-1.5 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 text-xs font-black text-blue-600 dark:text-blue-300">
+                            <span class="h-2 w-2 rounded-full bg-blue-500 animate-ping"></span>
+                            <span id="waiting-count-number">{{ $waitingQueues->count() }}</span> MENUNGGU
                         </span>
                     </div>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Daftar nomor antrean yang sedang dan telah dipanggil</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Daftar nomor antrean yang sedang menunggu panggilan operator loket</p>
                 </div>
 
                 <!-- Empty State -->
-                <div id="called-queues-empty" @class(['m-6 flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-8 text-center text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400', 'hidden' => $calledQueues->isNotEmpty()])>
-                    <svg class="h-12 w-12 text-slate-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <div id="waiting-queues-empty" @class(['m-6 flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-8 text-center text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400', 'hidden' => $waitingQueues->isNotEmpty()])>
+                    <svg class="h-12 w-12 text-slate-400 dark:text-slate-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <p class="font-bold text-slate-700 dark:text-slate-300">Belum Ada Antrean Dipanggil</p>
-                    <p class="mt-1 text-xs text-slate-500">Nomor yang dipanggil operator akan tampil di panel ini secara langsung.</p>
+                    <p class="font-bold text-slate-700 dark:text-slate-300">Belum Ada Antrean Menunggu</p>
+                    <p class="mt-1 text-xs text-slate-500">Tiket yang baru dicetak dari loket CS akan otomatis muncul di sini.</p>
                 </div>
 
-                <!-- Called Queue Items -->
-                <ol id="called-queues" class="flex-1 space-y-3 overflow-y-auto px-5 py-5 max-h-[calc(100vh-280px)]">
-                    @foreach ($calledQueues as $queue)
-                        <li data-called-queue="{{ $queue->id }}" class="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-white p-4 shadow-lg shadow-slate-300/25 transition-all hover:border-blue-500/50 dark:border-slate-700/70 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:shadow-slate-950/30">
+                <!-- Waiting Queue Items -->
+                <ol id="waiting-queues" class="flex-1 space-y-3 overflow-y-auto px-5 py-5 max-h-[calc(100vh-280px)]">
+                    @foreach ($waitingQueues as $queue)
+                        <li data-waiting-queue="{{ $queue->id }}" class="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-white p-4 shadow-sm transition-all hover:border-blue-400 dark:border-slate-700/70 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:shadow-md">
                             <div class="flex items-center gap-3.5">
-                                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400">
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 font-mono text-sm font-black">
+                                    #
                                 </span>
                                 <div>
-                                    <span data-called-number class="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-200">{{ $queue->queue_number }}</span>
-                                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400">STATUS: DIPANGGIL</p>
+                                    <span data-queue-number class="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-300 block leading-tight">{{ $queue->queue_number }}</span>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">MENUNGGU</span>
+                                        @if($queue->layanan)
+                                            <span class="text-slate-400">&bull;</span>
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $queue->layanan->nama_layanan }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                            <span data-called-meja class="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-3.5 py-2 text-right text-xs font-black text-emerald-300 shadow-sm">
-                                {{ $queue->meja->nama_meja }}
-                            </span>
+                            <div class="flex flex-col items-end">
+                                <span data-queue-meja class="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-right text-xs font-black text-emerald-700 dark:text-emerald-300 shadow-sm">
+                                    {{ $queue->meja?->nama_meja ?? '-' }}
+                                </span>
+                                <span class="text-[10px] text-slate-400 mt-1 font-mono">
+                                    {{ $queue->created_at->format('H:i') }} WIB
+                                </span>
+                            </div>
                         </li>
                     @endforeach
                 </ol>
