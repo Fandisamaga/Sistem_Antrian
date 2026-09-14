@@ -55,7 +55,11 @@ class QueueService
             $queue->load(['meja', 'layanan']);
 
             // Broadcast realtime ke display & meja operator
-            event(new QueueCreated($queue));
+            try {
+                event(new QueueCreated($queue));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('QueueCreated broadcast failed: '.$e->getMessage());
+            }
 
             return $queue;
         }, 5);

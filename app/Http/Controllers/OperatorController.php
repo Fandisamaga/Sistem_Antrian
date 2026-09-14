@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Events\QueueCalled;
+use App\Events\QueueUpdated;
 use App\Models\Queue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OperatorController extends Controller
 {
@@ -45,44 +47,85 @@ class OperatorController extends Controller
         ])['action'];
 
         $now = now();
+        $previousStatus = $queue->status;
 
         if ($action === 'call') {
             $waitDuration = $queue->created_at ? (int) $queue->created_at->diffInSeconds($now) : null;
 
-            $queue->update([
-                'status' => 'called',
-                'operator_id' => $user->id,
-                'called_at' => $now,
-                'wait_duration' => $waitDuration,
-            ]);
+            // Proteksi atomik: hanya set 'called' dan hitung durasi tunggu jika status masih 'waiting'
+            $affected = Queue::where('id', $queue->id)
+                ->where('status', 'waiting')
+                ->update([
+                    'status' => 'called',
+                    'operator_id' => $user->id,
+                    'called_at' => $now,
+                    'wait_duration' => $waitDuration,
+                ]);
 
-            event(new QueueCalled($queue->fresh(['meja', 'layanan'])));
+            if ($affected > 0) {
+                try {
+                    event(new QueueCalled($queue->fresh(['meja', 'layanan'])));
+                } catch (\Throwable $e) {
+                    Log::warning('QueueCalled broadcast failed: '.$e->getMessage());
+                }
+            } else {
+                // Jika sudah dalam status called (misal double-click cepat), siarkan ulang tanpa merusak timestamp awal
+                try {
+                    event(new QueueCalled($queue->load(['meja', 'layanan'])));
+                } catch (\Throwable $e) {
+                    Log::warning('QueueCalled repeat broadcast failed: '.$e->getMessage());
+                }
+            }
         }
 
         if ($action === 'replay') {
-            event(new QueueCalled($queue->load(['meja', 'layanan'])));
+            try {
+                event(new QueueCalled($queue->load(['meja', 'layanan'])));
+            } catch (\Throwable $e) {
+                Log::warning('QueueCalled replay broadcast failed: '.$e->getMessage());
+            }
         }
 
         if ($action === 'skip') {
             $serveDuration = $queue->called_at ? (int) $queue->called_at->diffInSeconds($now) : null;
 
-            $queue->update([
-                'status' => 'skipped',
-                'operator_id' => $user->id,
-                'completed_at' => $now,
-                'serve_duration' => $serveDuration,
-            ]);
+            $affected = Queue::where('id', $queue->id)
+                ->whereIn('status', ['waiting', 'called'])
+                ->update([
+                    'status' => 'skipped',
+                    'operator_id' => $user->id,
+                    'completed_at' => $now,
+                    'serve_duration' => $serveDuration,
+                ]);
+
+            if ($affected > 0) {
+                try {
+                    event(new QueueUpdated($queue->fresh(['meja', 'layanan']), $previousStatus));
+                } catch (\Throwable $e) {
+                    Log::warning('QueueUpdated skip broadcast failed: '.$e->getMessage());
+                }
+            }
         }
 
         if ($action === 'complete') {
             $serveDuration = $queue->called_at ? (int) $queue->called_at->diffInSeconds($now) : null;
 
-            $queue->update([
-                'status' => 'completed',
-                'operator_id' => $user->id,
-                'completed_at' => $now,
-                'serve_duration' => $serveDuration,
-            ]);
+            $affected = Queue::where('id', $queue->id)
+                ->whereIn('status', ['waiting', 'called'])
+                ->update([
+                    'status' => 'completed',
+                    'operator_id' => $user->id,
+                    'completed_at' => $now,
+                    'serve_duration' => $serveDuration,
+                ]);
+
+            if ($affected > 0) {
+                try {
+                    event(new QueueUpdated($queue->fresh(['meja', 'layanan']), $previousStatus));
+                } catch (\Throwable $e) {
+                    Log::warning('QueueUpdated complete broadcast failed: '.$e->getMessage());
+                }
+            }
         }
 
         return $request->expectsJson()

@@ -31,6 +31,7 @@ class QueueCalled implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
+            'id' => $this->queue->id,
             'queue_id' => $this->queue->id,
             'queue_number' => $this->queue->queue_number,
             'meja' => $this->queue->meja?->nama_meja,

@@ -55,6 +55,7 @@ class DisplayStateTest extends TestCase
 
         $this->assertInstanceOf(ShouldBroadcastNow::class, $event);
         $this->assertSame([
+            'id' => $queue->id,
             'queue_id' => $queue->id,
             'queue_number' => '001',
             'meja' => 'Meja 01',
