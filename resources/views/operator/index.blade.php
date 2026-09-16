@@ -30,6 +30,16 @@
                 </div>
             </div>
 
+            @if(! $meja->is_active)
+                <div class="mb-7 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-4 text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-3 shadow-lg">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white font-black">!</span>
+                    <div>
+                        <p class="font-black uppercase tracking-wide">Meja Ditandai Nonaktif / Operator Absen</p>
+                        <p class="text-xs font-medium text-rose-600 dark:text-rose-400">Status meja ini sedang dinonaktifkan oleh Super Admin sehingga loket CS tidak mengarahkan tiket baru ke meja ini. Hubungi Super Admin jika Anda sudah kembali aktif bertugas.</p>
+                    </div>
+                </div>
+            @endif
+
             <!-- Daftar Antrean -->
             <div id="operator-queue-list" class="space-y-4">
                 @forelse ($queues as $queue)

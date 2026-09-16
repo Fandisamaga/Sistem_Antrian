@@ -46,6 +46,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::post('/mejas', [AdminOperatorController::class, 'storeMeja'])->name('mejas.store');
     Route::put('/mejas/{meja}', [AdminOperatorController::class, 'updateMeja'])->name('mejas.update');
+    Route::patch('/mejas/{meja}/toggle', [AdminOperatorController::class, 'toggleMejaStatus'])->name('mejas.toggle');
     Route::delete('/mejas/{meja}', [AdminOperatorController::class, 'destroyMeja'])->name('mejas.destroy');
 
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');

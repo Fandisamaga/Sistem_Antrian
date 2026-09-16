@@ -63,40 +63,70 @@
 
                 <div id="meja-buttons-grid" class="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @foreach ($mejas as $meja)
-                        <div data-meja-wrapper data-waiting-count="{{ $meja->waiting_count ?? 0 }}" data-nomor-meja="{{ $meja->nomor_meja }}">
+                        <div data-meja-wrapper data-waiting-count="{{ $meja->waiting_count ?? 0 }}" data-nomor-meja="{{ $meja->nomor_meja }}" data-is-active="{{ $meja->is_active ? '1' : '0' }}">
                             <form method="POST" action="{{ route('cs.queues.store', $meja) }}" data-queue-form>
                                 @csrf
                                 <input type="hidden" name="layanan_id" class="input-layanan-id" value="{{ $layanans->first()?->id }}">
-                                <button type="submit" class="group relative flex h-36 w-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-4 text-left shadow-md transition hover:-translate-y-1 hover:border-blue-500 hover:shadow-xl dark:border-slate-700/80 dark:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                    <!-- Bagian Atas: Nama Meja & Nomor -->
-                                    <div class="flex items-start justify-between w-full">
-                                        <div>
-                                            <span class="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                                {{ $meja->nama_meja }}
+                                
+                                @if($meja->is_active)
+                                    <button type="submit" class="group relative flex h-36 w-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-4 text-left shadow-md transition hover:-translate-y-1 hover:border-blue-500 hover:shadow-xl dark:border-slate-700/80 dark:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                        <!-- Bagian Atas: Nama Meja & Nomor -->
+                                        <div class="flex items-start justify-between w-full">
+                                            <div>
+                                                <span class="text-lg font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                    {{ $meja->nama_meja }}
+                                                </span>
+                                            </div>
+                                            <span class="text-2xl font-black text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+                                                {{ $meja->formatted_nomor }}
                                             </span>
                                         </div>
-                                        <span class="text-2xl font-black text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
-                                            {{ $meja->formatted_nomor }}
-                                        </span>
-                                    </div>
 
-                                    <!-- Bagian Bawah: Indikator Jumlah Antrean Menunggu -->
-                                    <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-700/60">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-400 group-hover:text-blue-500">
-                                                KLIK AMBIL TIKET
-                                            </span>
-                                            <span data-meja-counter="{{ $meja->id }}" @class([
-                                                'counter-badge rounded-xl px-2.5 py-1 text-xs font-black shadow-sm transition-colors',
-                                                'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' => ($meja->waiting_count ?? 0) === 0,
-                                                'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' => ($meja->waiting_count ?? 0) > 0 && ($meja->waiting_count ?? 0) <= 2,
-                                                'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' => ($meja->waiting_count ?? 0) > 2,
-                                            ])>
-                                                {{ $meja->waiting_count ?? 0 }} Menunggu
+                                        <!-- Bagian Bawah: Indikator Jumlah Antrean Menunggu -->
+                                        <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-400 group-hover:text-blue-500">
+                                                    KLIK AMBIL TIKET
+                                                </span>
+                                                <span data-meja-counter="{{ $meja->id }}" @class([
+                                                    'counter-badge rounded-xl px-2.5 py-1 text-xs font-black shadow-sm transition-colors',
+                                                    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' => ($meja->waiting_count ?? 0) === 0,
+                                                    'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' => ($meja->waiting_count ?? 0) > 0 && ($meja->waiting_count ?? 0) <= 2,
+                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' => ($meja->waiting_count ?? 0) > 2,
+                                                ])>
+                                                    {{ $meja->waiting_count ?? 0 }} Menunggu
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                @else
+                                    <button type="button" disabled class="relative flex h-36 w-full flex-col justify-between rounded-3xl border border-dashed border-rose-300/80 bg-slate-100/80 p-4 text-left opacity-60 cursor-not-allowed dark:border-rose-500/30 dark:bg-slate-900/40">
+                                        <!-- Bagian Atas: Nama Meja & Nomor -->
+                                        <div class="flex items-start justify-between w-full">
+                                            <div>
+                                                <span class="text-lg font-black text-slate-500 dark:text-slate-400 line-through">
+                                                    {{ $meja->nama_meja }}
+                                                </span>
+                                            </div>
+                                            <span class="text-2xl font-black text-slate-300 dark:text-slate-700">
+                                                {{ $meja->formatted_nomor }}
                                             </span>
                                         </div>
-                                    </div>
-                                </button>
+
+                                        <!-- Bagian Bawah: Label Operator Absen -->
+                                        <div class="w-full pt-2 border-t border-rose-200 dark:border-rose-900/40">
+                                            <div class="flex items-center justify-between">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                                                    OPERATOR ABSEN
+                                                </span>
+                                                <span class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-black text-rose-600 dark:text-rose-400">
+                                                    Tutup
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                @endif
                             </form>
                         </div>
                     @endforeach

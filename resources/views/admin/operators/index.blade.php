@@ -129,6 +129,7 @@
                             <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-black text-slate-500 uppercase">
                                 <th class="py-3 px-3">Nomor Meja</th>
                                 <th class="py-3 px-3">Nama Meja</th>
+                                <th class="py-3 px-3">Status Operasional</th>
                                 <th class="py-3 px-3">Cakupan Pelayanan</th>
                                 <th class="py-3 px-3">Petugas Operator</th>
                                 <th class="py-3 px-3 text-center">Antrean Hari Ini</th>
@@ -143,6 +144,19 @@
                                     </td>
                                     <td class="py-3 px-3 font-black text-slate-900 dark:text-white">{{ $meja->nama_meja }}</td>
                                     <td class="py-3 px-3 text-xs">
+                                        @if($meja->is_active)
+                                            <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                AKTIF / HADIR
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-black text-rose-600 dark:text-rose-400">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                                                NONAKTIF (ABSEN)
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-3 text-xs">
                                         <span class="rounded-lg bg-blue-500/15 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-400">Fleksibel (Dipilih CS)</span>
                                     </td>
                                     <td class="py-3 px-3 text-xs">
@@ -152,16 +166,31 @@
                                         {{ $meja->today_queues ?? 0 }}
                                     </td>
                                     <td class="py-3 px-3 text-right">
-                                        <form method="POST" action="{{ route('admin.mejas.destroy', $meja) }}" class="inline" onsubmit="return confirm('Hapus meja loket ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Hapus</button>
-                                        </form>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <form method="POST" action="{{ route('admin.mejas.toggle', $meja) }}" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                @if($meja->is_active)
+                                                    <button type="submit" title="Nonaktifkan jika operator tidak datang / absen" class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-black text-amber-700 hover:bg-amber-500/20 dark:text-amber-300 transition">
+                                                        Nonaktifkan (Absen)
+                                                    </button>
+                                                @else
+                                                    <button type="submit" title="Aktifkan kembali meja ini" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300 transition">
+                                                        Aktifkan Meja
+                                                    </button>
+                                                @endif
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.mejas.destroy', $meja) }}" class="inline" onsubmit="return confirm('Hapus meja loket ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Hapus</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-8 text-center text-slate-500">Belum ada meja yang ditambahkan.</td>
+                                    <td colspan="7" class="py-8 text-center text-slate-500">Belum ada meja yang ditambahkan.</td>
                                 </tr>
                             @endforelse
                         </tbody>

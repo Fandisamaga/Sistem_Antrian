@@ -8,6 +8,14 @@ export function sortMejaButtons() {
     const wrappers = Array.from(grid.querySelectorAll('[data-meja-wrapper]'));
 
     wrappers.sort((a, b) => {
+        const activeA = a.dataset.isActive !== '0' ? 1 : 0;
+        const activeB = b.dataset.isActive !== '0' ? 1 : 0;
+
+        // Meja aktif selalu diprioritaskan di atas meja nonaktif (absen)
+        if (activeA !== activeB) {
+            return activeB - activeA;
+        }
+
         const countA = parseInt(a.dataset.waitingCount || '0', 10);
         const countB = parseInt(b.dataset.waitingCount || '0', 10);
 
@@ -103,7 +111,14 @@ export function initCustomerService() {
                 });
 
                 if (!response.ok) {
-                    alert('Nomor antrean gagal dibuat. Silakan coba lagi.');
+                    let errorMessage = 'Nomor antrean gagal dibuat. Silakan coba lagi.';
+                    try {
+                        const errData = await response.json();
+                        if (errData && errData.message) {
+                            errorMessage = errData.message;
+                        }
+                    } catch (_) {}
+                    alert(errorMessage);
                     return;
                 }
 

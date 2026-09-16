@@ -131,12 +131,25 @@ class OperatorController extends Controller
             'nama_meja' => ['required', 'string', 'max:100'],
             'nomor_meja' => ['required', 'integer', 'min:1'],
             'layanan_id' => ['nullable', 'exists:layanans,id'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $meja->update($validated);
 
         return redirect()->route('admin.operators.index')
             ->with('success', 'Data meja pelayanan berhasil diperbarui.');
+    }
+
+    public function toggleMejaStatus(Meja $meja)
+    {
+        $meja->update([
+            'is_active' => ! $meja->is_active,
+        ]);
+
+        $statusText = $meja->is_active ? 'diaktifkan kembali' : 'dinonaktifkan (operator absen)';
+
+        return redirect()->route('admin.operators.index')
+            ->with('success', "Status {$meja->nama_meja} berhasil {$statusText}.");
     }
 
     public function destroyMeja(Meja $meja)
