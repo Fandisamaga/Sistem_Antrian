@@ -13,28 +13,24 @@ use Illuminate\Support\Facades\DB;
 class QueueService
 {
     /**
-     * Membuat nomor antrean berurutan (001, 002, dst.) yang direset per hari,
-     * lalu ditautkan ke meja dan layanan yang dipilih.
+     * Membuat nomor antrean berurutan untuk setiap meja (001, 002, dst.)
+     * yang direset per hari, lalu ditautkan ke meja dan layanan yang dipilih.
      */
     public function createFor(Meja $meja, ?Layanan $layanan = null): Queue
     {
         return DB::transaction(function () use ($meja, $layanan): Queue {
             $today = Carbon::today()->toDateString();
 
-            // Ambil baris counter tunggal dengan row lock
-            $counter = QueueCounter::query()->lockForUpdate()->first();
+            // Setiap meja memiliki counter sendiri untuk tiap hari.
+            $counter = QueueCounter::query()
+                ->where('meja_id', $meja->id)
+                ->whereDate('queue_date', $today)
+                ->lockForUpdate()
+                ->first();
 
             if (! $counter) {
                 $counter = QueueCounter::create([
-                    'queue_date' => $today,
-                    'current_number' => 0,
-                ]);
-            }
-
-            // Jika tanggal berganti (hari baru), reset nomor ke 0
-            $counterDate = $counter->queue_date ? Carbon::parse($counter->queue_date)->toDateString() : null;
-            if ($counterDate !== $today) {
-                $counter->update([
+                    'meja_id' => $meja->id,
                     'queue_date' => $today,
                     'current_number' => 0,
                 ]);

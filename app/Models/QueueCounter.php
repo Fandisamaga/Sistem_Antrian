@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class QueueCounter extends Model
 {
     protected $fillable = [
+        'meja_id',
         'queue_date',
         'current_number',
     ];
