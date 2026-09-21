@@ -1,5 +1,5 @@
 <x-layouts.terminal title="Display Antrian Publik - DUKCAPIL">
-    <section class="flex flex-1 flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.10),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.08),transparent_35%)] p-3 dark:bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.22),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.18),transparent_35%)] sm:p-5 lg:p-6">
+    <section id="display-panel" data-latest-call-signature="{{ $latestQueue?->call_signature }}" class="flex flex-1 flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.10),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.08),transparent_35%)] p-3 dark:bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.22),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(16,185,129,0.18),transparent_35%)] sm:p-5 lg:p-6">
         <!-- Main Grid Area -->
         <div class="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] xl:gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <!-- Hero Board: Panggilan Utama -->

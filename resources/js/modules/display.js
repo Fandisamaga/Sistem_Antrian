@@ -1,6 +1,27 @@
-import { queueAnnouncement, isAnnouncing, announcementQueue, setOnAnnounce } from './audio';
+import {
+    queueAnnouncement,
+    isAnnouncing,
+    announcementQueue,
+    setOnAnnounce,
+    setOnAudioStatus,
+    prepareAudio,
+} from './audio';
 
 // --- Display TV Engine (Daftar Seluruh Antrean Menunggu & Panggilan Utama) ---
+let lastAnnouncedCallSignature = null;
+
+function announceCalledQueue(queue, force = false) {
+    const queueId = queue?.queue_id || queue?.id;
+    const callSignature = queue?.call_signature || String(queueId);
+
+    if (!queueId || (!force && callSignature === lastAnnouncedCallSignature)) {
+        return;
+    }
+
+    lastAnnouncedCallSignature = callSignature;
+    queueAnnouncement(queue);
+}
+
 export function updateDisplayBoard(queue) {
     if (!queue) {
         return;
@@ -141,9 +162,14 @@ export async function refreshDisplay() {
         const state = await response.json();
         renderWaitingQueues(state.waiting);
 
-        // Hanya perbarui layar jika antrean suara SEDANG TIDAK BERJALAN dan antrean pemanggilan KOSONG
-        if (state.latest && !isAnnouncing && announcementQueue.length === 0) {
-            updateDisplayBoard(state.latest);
+        if (state.latest) {
+            // Cadangan apabila koneksi WebSocket display sedang terputus.
+            // Panggilan baru tetap dibacakan pada siklus polling berikutnya.
+            announceCalledQueue(state.latest);
+
+            if (!isAnnouncing && announcementQueue.length === 0) {
+                updateDisplayBoard(state.latest);
+            }
         }
     } catch {
         // Fallback silently
@@ -152,6 +178,14 @@ export async function refreshDisplay() {
 
 export function initDisplay() {
     if (!document.querySelector('#display-number')) return;
+
+    const displayPanel = document.querySelector('#display-panel');
+    lastAnnouncedCallSignature = displayPanel?.dataset.latestCallSignature || null;
+
+    const soundIndicator = document.querySelector('#sound-indicator');
+    setOnAudioStatus((enabled) => {
+        soundIndicator?.classList.toggle('hidden', !enabled);
+    });
 
     // Tautkan sinkronisasi papan display dengan antrean audio FIFO
     setOnAnnounce((current) => {
@@ -177,7 +211,9 @@ export function initDisplay() {
                     meja: queue.meja,
                     layanan: queue.layanan,
                 };
-                queueAnnouncement(calledQueue);
+                // `force` memastikan tombol Panggil Ulang untuk nomor yang
+                // sama tetap selalu dibacakan.
+                announceCalledQueue(calledQueue, true);
             })
             .listen('.QueueUpdated', (queue) => {
                 // Jika antrean dilewati atau selesai, hapus dari antrean menunggu
@@ -190,4 +226,3 @@ export function initDisplay() {
     // Polling fallback setiap 5 detik agar selalu sinkron cepat tanpa lag
     setInterval(refreshDisplay, 5000);
 }
-

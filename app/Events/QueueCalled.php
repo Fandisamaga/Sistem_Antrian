@@ -34,6 +34,7 @@ class QueueCalled implements ShouldBroadcastNow
             'id' => $this->queue->id,
             'queue_id' => $this->queue->id,
             'queue_number' => $this->queue->queue_number,
+            'call_signature' => $this->queue->call_signature,
             'meja' => $this->queue->meja?->nama_meja,
             'meja_id' => $this->queue->meja_id,
             'nomor_meja' => $this->queue->meja?->nomor_meja,

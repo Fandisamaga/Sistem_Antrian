@@ -1,5 +1,9 @@
 import { csrfToken } from './utils';
 
+// ID tiket yang sudah diterapkan. Respons HTTP memperbarui halaman CS
+// seketika; event WebSocket yang datang sesudahnya tidak boleh menambah dua kali.
+const processedQueueIds = new Set();
+
 // --- CS: Otomatis Sorting Tombol Meja (Meja Lengang / 0 Antrean Naik ke Atas) ---
 export function sortMejaButtons() {
     const grid = document.querySelector('#meja-buttons-grid');
@@ -54,6 +58,19 @@ export function updateMejaBadge(mejaId, change) {
     }
 
     sortMejaButtons();
+}
+
+function applyQueueCreated(queue) {
+    const queueId = queue?.id ?? queue?.queue_id;
+    if (!queue?.meja_id || (queueId && processedQueueIds.has(String(queueId)))) {
+        return;
+    }
+
+    if (queueId) {
+        processedQueueIds.add(String(queueId));
+    }
+
+    updateMejaBadge(queue.meja_id, 1);
 }
 
 export function initCustomerService() {
@@ -124,6 +141,10 @@ export function initCustomerService() {
 
                 const data = await response.json();
 
+                // Respons HTTP ini membuat CS yang mengambil tiket langsung
+                // terbarui, bahkan bila koneksi WebSocket baru sedang menyambung.
+                applyQueueCreated(data.queue);
+
                 // Isi data tiket thermal fisik
                 const ticketNumberEl = document.querySelector('#ticket-number');
                 const ticketMejaEl = document.querySelector('#ticket-meja');
@@ -175,16 +196,12 @@ export function initCustomerService() {
     if (window.Echo) {
         window.Echo.channel('queue-display')
             .listen('.QueueCreated', (event) => {
-                updateMejaBadge(event.meja_id, 1);
-            })
-            .listen('.QueueCalled', (event) => {
-                updateMejaBadge(event.meja_id, -1);
+                applyQueueCreated(event);
             })
             .listen('.QueueUpdated', (event) => {
-                if (event.previous_status === 'waiting' && ['skipped', 'completed'].includes(event.status)) {
+                if (event.status === 'completed') {
                     updateMejaBadge(event.meja_id, -1);
                 }
             });
     }
 }
-

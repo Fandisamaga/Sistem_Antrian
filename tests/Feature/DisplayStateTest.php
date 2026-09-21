@@ -58,6 +58,7 @@ class DisplayStateTest extends TestCase
             'id' => $queue->id,
             'queue_id' => $queue->id,
             'queue_number' => '001',
+            'call_signature' => $queue->call_signature,
             'meja' => 'Meja 01',
             'meja_id' => $meja->id,
             'nomor_meja' => 1,

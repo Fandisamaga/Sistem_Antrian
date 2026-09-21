@@ -131,6 +131,27 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('layanan', 'Kartu Keluarga');
     }
 
+    public function test_cs_keeps_called_and_skipped_queues_in_the_active_counter_until_completed(): void
+    {
+        $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);
+        $cs = User::factory()->create(['role' => 'cs']);
+
+        foreach (['waiting', 'called', 'skipped', 'completed'] as $index => $status) {
+            Queue::create([
+                'queue_number' => str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
+                'meja_id' => $meja->id,
+                'status' => $status,
+            ]);
+        }
+
+        $this->actingAs($cs)
+            ->get(route('cs.index'))
+            ->assertOk()
+            ->assertViewHas('mejas', function ($mejas) use ($meja) {
+                return $mejas->firstWhere('id', $meja->id)->active_count === 3;
+            });
+    }
+
     public function test_reports_show_operator_performance_stats(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

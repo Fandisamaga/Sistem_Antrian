@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Queue extends Model
 {
+    protected $appends = ['call_signature'];
+
     protected $fillable = [
         'queue_number',
         'queue_date',
@@ -70,5 +72,10 @@ class Queue extends Model
     public function getFormattedServeDurationAttribute(): string
     {
         return self::formatSeconds($this->serve_duration);
+    }
+
+    public function getCallSignatureAttribute(): string
+    {
+        return sprintf('%s:%s', $this->id, $this->updated_at?->getTimestamp() ?? 0);
     }
 }

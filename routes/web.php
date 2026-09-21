@@ -30,6 +30,7 @@ Route::middleware(['auth', 'role:cs,admin'])->group(function () {
 
 Route::middleware(['auth', 'role:operator,admin'])->group(function () {
     Route::get('/operator', [OperatorController::class, 'index'])->name('operator.index');
+    Route::get('/operator/queues/state', [OperatorController::class, 'state'])->name('operator.queues.state');
     Route::match(['patch', 'post'], '/operator/queues/{queue}', [OperatorController::class, 'update'])
         ->name('operator.queues.update');
 });

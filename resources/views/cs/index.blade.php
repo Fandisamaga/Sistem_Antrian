@@ -63,7 +63,7 @@
 
                 <div id="meja-buttons-grid" class="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @foreach ($mejas as $meja)
-                        <div data-meja-wrapper data-waiting-count="{{ $meja->waiting_count ?? 0 }}" data-nomor-meja="{{ $meja->nomor_meja }}" data-is-active="{{ $meja->is_active ? '1' : '0' }}">
+                        <div data-meja-wrapper data-waiting-count="{{ $meja->active_count ?? 0 }}" data-nomor-meja="{{ $meja->nomor_meja }}" data-is-active="{{ $meja->is_active ? '1' : '0' }}">
                             <form method="POST" action="{{ route('cs.queues.store', $meja) }}" data-queue-form>
                                 @csrf
                                 <input type="hidden" name="layanan_id" class="input-layanan-id" value="{{ $layanans->first()?->id }}">
@@ -82,7 +82,7 @@
                                             </span>
                                         </div>
 
-                                        <!-- Bagian Bawah: Indikator Jumlah Antrean Menunggu -->
+                                        <!-- Bagian Bawah: Indikator Antrean yang Belum Selesai -->
                                         <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-700/60">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-400 group-hover:text-blue-500">
@@ -90,11 +90,11 @@
                                                 </span>
                                                 <span data-meja-counter="{{ $meja->id }}" @class([
                                                     'counter-badge rounded-xl px-2.5 py-1 text-xs font-black shadow-sm transition-colors',
-                                                    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' => ($meja->waiting_count ?? 0) === 0,
-                                                    'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' => ($meja->waiting_count ?? 0) > 0 && ($meja->waiting_count ?? 0) <= 2,
-                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' => ($meja->waiting_count ?? 0) > 2,
+                                                    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' => ($meja->active_count ?? 0) === 0,
+                                                    'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' => ($meja->active_count ?? 0) > 0 && ($meja->active_count ?? 0) <= 2,
+                                                    'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' => ($meja->active_count ?? 0) > 2,
                                                 ])>
-                                                    {{ $meja->waiting_count ?? 0 }} Menunggu
+                                                    {{ $meja->active_count ?? 0 }} Menunggu
                                                 </span>
                                             </div>
                                         </div>
@@ -165,18 +165,32 @@
         </div>
     </div>
 
-    <!-- Layout Cetak Tiket Thermal: 001 Meja 1 -->
+    <!-- Layout Cetak Tiket Thermal -->
     <section id="ticket" class="hidden">
-        <div class="ticket-content text-center font-mono py-2">
-            <h2 class="text-sm font-black uppercase">DINAS DUKCAPIL</h2>
-            <p class="text-[10px] font-bold">KOTA PALU</p>
-            <div class="my-2 border-y border-dashed border-black py-2">
-                <p class="text-[9px] font-bold tracking-widest uppercase">NOMOR ANTREAN</p>
-                <strong id="ticket-number" class="block text-5xl font-black">---</strong>
-                <p id="ticket-meja" class="text-xl font-black uppercase mt-1">Meja</p>
+        <div class="ticket-content">
+            <header class="ticket-brand">
+                <h2 class="ticket-header">DINAS DUKCAPIL</h2>
+                <p class="ticket-sub">KOTA PALU</p>
+                <p class="ticket-site">dukcapil.palukota.go.id</p>
+            </header>
+
+            <div class="ticket-divider"></div>
+
+            <div class="ticket-queue">
+                <p class="ticket-label">NOMOR ANTREAN</p>
+                <strong id="ticket-number">---</strong>
+                <p id="ticket-meja" class="ticket-meja">Meja</p>
+                <p id="ticket-layanan" class="ticket-service"></p>
             </div>
-            <p id="ticket-layanan" class="text-[10px] font-bold uppercase"></p>
-            <p id="ticket-date" class="text-[8px] mt-1 text-slate-700"></p>
+
+            <div class="ticket-divider"></div>
+
+            <footer class="ticket-contact">
+                <p>Pengaduan: <strong>0878 7370 7457</strong></p>
+                <p>Pelayanan online: <strong>0852 2225 4370</strong></p>
+            </footer>
+
+            <p id="ticket-date" class="ticket-date"></p>
         </div>
     </section>
 </x-layouts.terminal>

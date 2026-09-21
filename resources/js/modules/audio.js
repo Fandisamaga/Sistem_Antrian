@@ -1,30 +1,70 @@
 // --- Web Audio API Chime & FIFO Announcement Engine ---
 let audioCtxInstance = null;
+let audioUnlocked = false;
+let onAudioStatusHandler = null;
 
 function getAudioContext() {
     if (!audioCtxInstance) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
             audioCtxInstance = new AudioCtx();
+            // A context can be suspended again after the display has been in
+            // the background. Keep observing it, rather than only its first
+            // transition, so the enable-audio prompt remains accurate.
+            audioCtxInstance.addEventListener('statechange', () => {
+                audioUnlocked = audioCtxInstance.state === 'running';
+                notifyAudioStatus();
+            });
         }
-    }
-    if (audioCtxInstance && audioCtxInstance.state === 'suspended') {
-        audioCtxInstance.resume();
     }
     return audioCtxInstance;
 }
 
-// Unlock audio on any click in window
-if (typeof window !== 'undefined') {
-    window.addEventListener('click', () => {
-        getAudioContext();
-    }, { once: false });
+function notifyAudioStatus() {
+    onAudioStatusHandler?.(audioUnlocked);
+}
+
+export function setOnAudioStatus(callback) {
+    onAudioStatusHandler = callback;
+    notifyAudioStatus();
+}
+
+// This is deliberately safe to call from a WebSocket event. A number call
+// must never wait for a visitor/operator to click the display first.
+export async function prepareAudio() {
+    const ctx = getAudioContext();
+
+    try {
+        // Resume TTS first. This API is independent from Web Audio and must
+        // still run when the browser blocks the optional chime.
+        window.speechSynthesis?.resume();
+
+        if (ctx && ctx.state !== 'running') {
+            // Browsers can leave this promise pending while autoplay is
+            // restricted. Do not let it hold the spoken queue announcement.
+            const resumeContext = Promise.resolve(ctx.resume()).catch(() => null);
+            const continueWithoutChime = new Promise((resolve) => {
+                setTimeout(resolve, 250);
+            });
+
+            await Promise.race([resumeContext, continueWithoutChime]);
+        }
+
+        // Safari/Chrome can keep the speech engine paused until a user gesture.
+        window.speechSynthesis?.resume();
+        audioUnlocked = !ctx || ctx.state === 'running';
+    } catch {
+        audioUnlocked = false;
+    }
+
+    notifyAudioStatus();
+    return audioUnlocked;
 }
 
 export function playChime() {
     try {
         const ctx = getAudioContext();
-        if (!ctx) return Promise.resolve();
+        if (!ctx || ctx.state !== 'running') return Promise.resolve();
 
         const now = ctx.currentTime;
 
@@ -58,6 +98,31 @@ export function playChime() {
     }
 }
 
+function numberToIndonesian(number) {
+    const value = Number.parseInt(number, 10);
+    if (!Number.isFinite(value) || value < 0) return String(number);
+
+    const words = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
+
+    if (value < 10) return words[value] || 'nol';
+    if (value === 10) return 'sepuluh';
+    if (value === 11) return 'sebelas';
+    if (value < 20) return `${words[value - 10]} belas`;
+    if (value < 100) {
+        return `${numberToIndonesian(Math.floor(value / 10))} puluh${value % 10 ? ` ${numberToIndonesian(value % 10)}` : ''}`;
+    }
+    if (value < 200) return `seratus${value % 100 ? ` ${numberToIndonesian(value % 100)}` : ''}`;
+    if (value < 1000) {
+        return `${numberToIndonesian(Math.floor(value / 100))} ratus${value % 100 ? ` ${numberToIndonesian(value % 100)}` : ''}`;
+    }
+    if (value < 2000) return `seribu${value % 1000 ? ` ${numberToIndonesian(value % 1000)}` : ''}`;
+    if (value < 1000000) {
+        return `${numberToIndonesian(Math.floor(value / 1000))} ribu${value % 1000 ? ` ${numberToIndonesian(value % 1000)}` : ''}`;
+    }
+
+    return String(value);
+}
+
 // Indonesian Text-to-Speech
 export function speakText(message) {
     return new Promise((resolve) => {
@@ -74,11 +139,12 @@ export function speakText(message) {
 
         const utterance = new SpeechSynthesisUtterance(message);
         const voices = speechSynthesis.getVoices();
-        const indonesianVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('id'));
+        const indonesianVoice = voices.find((v) => v.lang?.toLowerCase() === 'id-id')
+            || voices.find((v) => v.lang?.toLowerCase().startsWith('id'));
 
         utterance.lang = 'id-ID';
-        utterance.rate = 0.85;
-        utterance.pitch = 1.0;
+        utterance.rate = 0.78;
+        utterance.pitch = 0.92;
         utterance.volume = 1;
 
         if (indonesianVoice) {
@@ -138,16 +204,16 @@ export async function processAnnouncementQueue() {
     updateNextCallBadge();
 
     try {
+        // TTS must be attempted immediately for every call. Some browsers may
+        // reject the chime before a trusted interaction, but Web Speech can
+        // still announce the number and the FIFO queue must continue.
+        await prepareAudio();
         await playChime();
 
-        // Eja nomor secara ramah, misal 001 -> "nol nol satu"
-        const spelledNumber = current.queue_number.split('').map(d => {
-            const map = {'0': 'nol', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat', '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan'};
-            return map[d] || d;
-        }).join(' ');
+        const queueNumber = numberToIndonesian(current.queue_number);
 
         const deskName = current.meja?.nama_meja || (typeof current.meja === 'string' ? current.meja : 'loket');
-        await speakText(`Nomor antrean, ${spelledNumber}, silakan menuju, ${deskName}`);
+        await speakText(`Perhatian. Nomor antrean ${queueNumber}. Silakan menuju ke. ${deskName}.`);
     } catch {
         // Fallback
     } finally {
@@ -164,4 +230,3 @@ export function queueAnnouncement(queueData) {
     updateNextCallBadge();
     processAnnouncementQueue();
 }
-
