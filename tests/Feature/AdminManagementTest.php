@@ -131,6 +131,27 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('layanan', 'Kartu Keluarga');
     }
 
+    public function test_cs_keeps_called_and_skipped_queues_in_the_active_counter_until_completed(): void
+    {
+        $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);
+        $cs = User::factory()->create(['role' => 'cs']);
+
+        foreach (['waiting', 'called', 'skipped', 'completed'] as $index => $status) {
+            Queue::create([
+                'queue_number' => str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
+                'meja_id' => $meja->id,
+                'status' => $status,
+            ]);
+        }
+
+        $this->actingAs($cs)
+            ->get(route('cs.index'))
+            ->assertOk()
+            ->assertViewHas('mejas', function ($mejas) use ($meja) {
+                return $mejas->firstWhere('id', $meja->id)->active_count === 3;
+            });
+    }
+
     public function test_reports_show_operator_performance_stats(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -213,5 +234,45 @@ class AdminManagementTest extends TestCase
             ->assertSee('Akta Kelahiran')
             ->assertSee('Meja 03')
             ->assertSee('1 Antre');
+    }
+
+    public function test_admin_can_toggle_meja_status_and_non_admin_forbidden(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $operator = User::factory()->create(['role' => 'operator']);
+        $meja = Meja::create(['nomor_meja' => 5, 'nama_meja' => 'Meja 05', 'is_active' => true]);
+
+        // Non-admin forbidden
+        $this->actingAs($operator)
+            ->patch(route('admin.mejas.toggle', $meja))
+            ->assertForbidden();
+
+        // Admin toggles to inactive (operator absent)
+        $this->actingAs($admin)
+            ->patch(route('admin.mejas.toggle', $meja))
+            ->assertRedirect(route('admin.operators.index'));
+
+        $this->assertFalse($meja->fresh()->is_active);
+
+        // Admin toggles back to active
+        $this->actingAs($admin)
+            ->patch(route('admin.mejas.toggle', $meja))
+            ->assertRedirect(route('admin.operators.index'));
+
+        $this->assertTrue($meja->fresh()->is_active);
+    }
+
+    public function test_cs_cannot_create_queue_for_inactive_meja(): void
+    {
+        $cs = User::factory()->create(['role' => 'cs']);
+        $meja = Meja::create(['nomor_meja' => 6, 'nama_meja' => 'Meja 06', 'is_active' => false]);
+
+        $response = $this->actingAs($cs)->postJson(route('cs.queues.store', $meja));
+        $response->assertStatus(422);
+
+        // Once reactivated, CS can create queue
+        $meja->update(['is_active' => true]);
+        $responseOk = $this->actingAs($cs)->postJson(route('cs.queues.store', $meja));
+        $responseOk->assertCreated();
     }
 }

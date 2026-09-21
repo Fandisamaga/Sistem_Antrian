@@ -30,7 +30,8 @@ Route::middleware(['auth', 'role:cs,admin'])->group(function () {
 
 Route::middleware(['auth', 'role:operator,admin'])->group(function () {
     Route::get('/operator', [OperatorController::class, 'index'])->name('operator.index');
-    Route::patch('/operator/queues/{queue}', [OperatorController::class, 'update'])
+    Route::get('/operator/queues/state', [OperatorController::class, 'state'])->name('operator.queues.state');
+    Route::match(['patch', 'post'], '/operator/queues/{queue}', [OperatorController::class, 'update'])
         ->name('operator.queues.update');
 });
 
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::post('/mejas', [AdminOperatorController::class, 'storeMeja'])->name('mejas.store');
     Route::put('/mejas/{meja}', [AdminOperatorController::class, 'updateMeja'])->name('mejas.update');
+    Route::patch('/mejas/{meja}/toggle', [AdminOperatorController::class, 'toggleMejaStatus'])->name('mejas.toggle');
     Route::delete('/mejas/{meja}', [AdminOperatorController::class, 'destroyMeja'])->name('mejas.destroy');
 
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');

@@ -9,32 +9,31 @@ use App\Models\Queue;
 use App\Models\QueueCounter;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class QueueService
 {
     /**
-     * Membuat nomor antrean berurutan untuk setiap meja (001, 002, dst.)
-     * yang direset per hari, lalu ditautkan ke meja dan layanan yang dipilih.
+     * Membuat nomor antrean global (001, 002, dst.) untuk seluruh meja.
+     * Nomor direset setiap hari, sedangkan meja dan layanan tetap tersimpan
+     * pada tiket untuk menentukan tujuan pelayanannya.
      */
     public function createFor(Meja $meja, ?Layanan $layanan = null): Queue
     {
-        return DB::transaction(function () use ($meja, $layanan): Queue {
+        $queue = DB::transaction(function () use ($meja, $layanan): Queue {
             $today = Carbon::today()->toDateString();
 
-            // Setiap meja memiliki counter sendiri untuk tiap hari.
-            $counter = QueueCounter::query()
-                ->where('meja_id', $meja->id)
-                ->whereDate('queue_date', $today)
-                ->lockForUpdate()
-                ->first();
+            // Satu counter per tanggal, tidak lagi dibedakan per meja.
+            // createOrFirst aman bila dua CS membuat counter hari baru bersamaan.
+            $counter = QueueCounter::query()->createOrFirst(
+                ['queue_date' => $today],
+                ['current_number' => 0],
+            );
 
-            if (! $counter) {
-                $counter = QueueCounter::create([
-                    'meja_id' => $meja->id,
-                    'queue_date' => $today,
-                    'current_number' => 0,
-                ]);
-            }
+            $counter = QueueCounter::query()
+                ->whereKey($counter)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             $counter->increment('current_number');
             $counter->refresh();
@@ -47,13 +46,20 @@ class QueueService
                 'status' => 'waiting',
             ]);
 
-            // Muat relasi meja & layanan
+            // Muat relasi meja & layanan untuk payload WebSocket.
             $queue->load(['meja', 'layanan']);
-
-            // Broadcast realtime ke display & meja operator
-            event(new QueueCreated($queue));
 
             return $queue;
         }, 5);
+
+        // Broadcast hanya setelah transaksi tersimpan, agar semua klien
+        // menerima tiket yang sudah benar-benar tersedia di database.
+        try {
+            event(new QueueCreated($queue));
+        } catch (\Throwable $e) {
+            Log::warning('QueueCreated broadcast failed: '.$e->getMessage());
+        }
+
+        return $queue;
     }
 }

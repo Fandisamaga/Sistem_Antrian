@@ -13,13 +13,20 @@ class Meja extends Model
         'nomor_meja',
         'nama_meja',
         'layanan_id',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'nomor_meja' => 'integer',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     public function layanan(): BelongsTo

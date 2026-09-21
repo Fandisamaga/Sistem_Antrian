@@ -14,16 +14,18 @@ class CustomerServiceController extends Controller
     {
         $today = Carbon::today()->toDateString();
 
-        // Urutkan meja secara otomatis: meja dengan antrean paling sedikit (termasuk 0 antrean) naik ke atas
+        // Antrean tetap dihitung setelah dipanggil atau dilewati. Jumlah baru
+        // berkurang ketika operator menandai tiket sebagai selesai.
         $mejas = Meja::with('layanan')
-            ->withCount(['queues as waiting_count' => function ($query) use ($today) {
-                $query->where('status', 'waiting')
+            ->withCount(['queues as active_count' => function ($query) use ($today) {
+                $query->whereIn('status', ['waiting', 'called', 'skipped'])
                     ->where(function ($q) use ($today) {
                         $q->whereDate('created_at', $today)
                             ->orWhere('queue_date', $today);
                     });
             }])
-            ->orderBy('waiting_count', 'asc')
+            ->orderBy('is_active', 'desc')
+            ->orderBy('active_count', 'asc')
             ->orderBy('nomor_meja', 'asc')
             ->get();
 
@@ -37,6 +39,8 @@ class CustomerServiceController extends Controller
 
     public function store(Request $request, Meja $meja, QueueService $queues)
     {
+        abort_if(! $meja->is_active, 422, 'Meja sedang tidak aktif / operator absen.');
+
         $validated = $request->validate([
             'layanan_id' => ['nullable', 'exists:layanans,id'],
         ]);

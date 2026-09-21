@@ -24,20 +24,30 @@
                     <div class="flex items-center gap-3">
                         <div class="flex flex-col items-end">
                             <span class="text-xs text-slate-500">Antrean Aktif Meja Ini</span>
-                            <span id="operator-active-queue-count" class="text-2xl font-black text-slate-900 dark:text-white">{{ $queues->count() }}</span>
+                            <span id="operator-active-count" class="text-2xl font-black text-slate-900 dark:text-white">{{ $queues->count() }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
+            @if(! $meja->is_active)
+                <div class="mb-7 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-4 text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-3 shadow-lg">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white font-black">!</span>
+                    <div>
+                        <p class="font-black uppercase tracking-wide">Meja Ditandai Nonaktif / Operator Absen</p>
+                        <p class="text-xs font-medium text-rose-600 dark:text-rose-400">Status meja ini sedang dinonaktifkan oleh Super Admin sehingga loket CS tidak mengarahkan tiket baru ke meja ini. Hubungi Super Admin jika Anda sudah kembali aktif bertugas.</p>
+                    </div>
+                </div>
+            @endif
+
             <!-- Daftar Antrean -->
             <div id="operator-queue-list" class="space-y-4">
                 @forelse ($queues as $queue)
-                    <article class="queue-row flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xl shadow-slate-300/30 backdrop-blur-xl transition hover:border-blue-400/50 dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-slate-950/25 dark:hover:border-blue-400/40 sm:p-6 md:flex-row md:items-center md:justify-between">
+                    <article data-queue-id="{{ $queue->id }}" class="queue-row flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xl shadow-slate-300/30 backdrop-blur-xl transition hover:border-blue-400/50 dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-slate-950/25 dark:hover:border-blue-400/40 sm:p-6 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{{ $queue->queue_number }}</p>
                             <div class="mt-1 flex items-center gap-2">
-                                <span class="text-xs font-black tracking-widest uppercase text-blue-600 dark:text-blue-300">{{ $queue->status }}</span>
+                                <span class="queue-status text-xs font-black tracking-widest uppercase text-blue-600 dark:text-blue-300">{{ $queue->status }}</span>
                                 @if($queue->layanan)
                                     <span class="text-slate-400">&bull;</span>
                                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $queue->layanan->nama_layanan }}</span>
@@ -47,8 +57,13 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 md:flex">
-                            @foreach (['call' => ['Panggil', 'bg-blue-600 hover:bg-blue-500 focus:ring-blue-400'], 'replay' => ['Panggil Ulang', 'bg-sky-600 hover:bg-sky-500 focus:ring-sky-400'], 'skip' => ['Lewati', 'bg-rose-600 hover:bg-rose-500 focus:ring-rose-400'], 'complete' => ['Selesai', 'bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-400']] as $action => [$label, $style])
+                        <div class="queue-actions grid grid-cols-2 gap-3 md:flex">
+                            @php
+                                $actions = $queue->status === 'waiting'
+                                    ? ['call' => ['Panggil', 'bg-blue-600 hover:bg-blue-500 focus:ring-blue-400']]
+                                    : ['replay' => ['Panggil Ulang', 'bg-sky-600 hover:bg-sky-500 focus:ring-sky-400'], 'skip' => ['Lewati', 'bg-rose-600 hover:bg-rose-500 focus:ring-rose-400'], 'complete' => ['Selesai', 'bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-400']];
+                            @endphp
+                            @foreach ($actions as $action => [$label, $style])
                                 <form method="POST" action="{{ route('operator.queues.update', $queue) }}" data-queue-action>
                                     @csrf
                                     @method('PATCH')

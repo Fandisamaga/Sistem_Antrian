@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class QueueCounter extends Model
 {
+    /** @var string Format sesuai kolom DATE agar pencarian counter konsisten di semua driver database. */
+    protected $dateFormat = 'Y-m-d';
+
     protected $fillable = [
-        'meja_id',
         'queue_date',
         'current_number',
     ];
