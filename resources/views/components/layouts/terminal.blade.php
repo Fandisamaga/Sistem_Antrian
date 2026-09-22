@@ -5,6 +5,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ $title ?? 'Sistem Antrian Dukcapil' }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800" rel="stylesheet" />
         <script>
@@ -20,7 +21,7 @@
         <header class="no-print flex items-center justify-between border-b border-slate-200/80 bg-white/70 px-4 py-3 backdrop-blur-sm transition-colors duration-300 sm:px-6 lg:px-8 dark:border-blue-400/15 dark:bg-slate-950/55">
             <!-- Nama Dinas dan Logo di Pojok Kiri Atas -->
             <div class="flex items-center gap-3.5">
-                <img src="{{ asset('Logo.png') }}" alt="Logo Dinas" class="h-12 w-auto object-contain drop-shadow-md">
+                <img src="{{ asset('logo.png') }}" alt="Logo Dinas" class="h-12 w-auto object-contain drop-shadow-md">
                 <div>
                     <h1 class="text-base font-black leading-tight tracking-wide text-slate-900 uppercase sm:text-lg dark:text-white">
                         DINAS KEPENDUDUKAN & PENCATATAN SIPIL

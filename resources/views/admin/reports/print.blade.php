@@ -137,7 +137,7 @@
 
     <!-- Kop Surat Resmi -->
     <div class="kop-surat">
-        <img src="{{ asset('Logo.png') }}" alt="Logo Dinas" class="kop-logo">
+        <img src="{{ asset('logo.png') }}" alt="Logo Dinas" class="kop-logo">
         <div class="kop-text">
             <h2>Pemerintah Kota Palu</h2>
             <h1>Dinas Kependudukan dan Pencatatan Sipil</h1>
@@ -334,4 +334,3 @@
     </div>
 </body>
 </html>
-
