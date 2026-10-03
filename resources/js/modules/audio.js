@@ -167,6 +167,12 @@ export const announcementQueue = [];
 export let isAnnouncing = false;
 
 let onAnnounceHandler = null;
+let activeAnnouncementId = null;
+let announcementVersion = 0;
+
+function queueIdOf(queue) {
+    return queue?.queue_id ?? queue?.id;
+}
 
 export function setOnAnnounce(callback) {
     onAnnounceHandler = callback;
@@ -189,6 +195,28 @@ export function updateNextCallBadge() {
     }
 }
 
+// Hapus panggilan yang sudah selesai/dilewati agar tidak diumumkan setelahnya.
+export function removeAnnouncement(queueId) {
+    if (!queueId) return;
+
+    const normalizedQueueId = String(queueId);
+
+    for (let index = announcementQueue.length - 1; index >= 0; index -= 1) {
+        if (String(queueIdOf(announcementQueue[index])) === normalizedQueueId) {
+            announcementQueue.splice(index, 1);
+        }
+    }
+
+    if (String(activeAnnouncementId) === normalizedQueueId) {
+        // Batalkan TTS yang sedang berjalan dan cegah TTS dimulai setelah
+        // nada pembuka selesai diputar.
+        announcementVersion += 1;
+        window.speechSynthesis?.cancel();
+    }
+
+    updateNextCallBadge();
+}
+
 export async function processAnnouncementQueue() {
     if (isAnnouncing || announcementQueue.length === 0) {
         return;
@@ -196,6 +224,9 @@ export async function processAnnouncementQueue() {
 
     isAnnouncing = true;
     const current = announcementQueue.shift();
+    const currentId = queueIdOf(current);
+    const currentVersion = ++announcementVersion;
+    activeAnnouncementId = currentId;
 
     // Notifikasi sinkronisasi tampilan layar TV
     if (onAnnounceHandler) {
@@ -208,7 +239,10 @@ export async function processAnnouncementQueue() {
         // reject the chime before a trusted interaction, but Web Speech can
         // still announce the number and the FIFO queue must continue.
         await prepareAudio();
+        if (currentVersion !== announcementVersion) return;
+
         await playChime();
+        if (currentVersion !== announcementVersion) return;
 
         const queueNumber = numberToIndonesian(current.queue_number);
 
@@ -217,6 +251,9 @@ export async function processAnnouncementQueue() {
     } catch {
         // Fallback
     } finally {
+        if (String(activeAnnouncementId) === String(currentId)) {
+            activeAnnouncementId = null;
+        }
         isAnnouncing = false;
         updateNextCallBadge();
         if (announcementQueue.length > 0) {

@@ -63,7 +63,7 @@
                     <svg id="theme-icon-moon" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                 </button>
                 <div class="flex flex-col items-end rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-1.5 shadow-inner dark:border-slate-800 dark:bg-slate-900/70">
-                    <div id="live-clock" class="font-mono text-sm font-black tracking-wider text-emerald-600 sm:text-base dark:text-emerald-400">--:--:-- WIB</div>
+                    <div id="live-clock" class="font-mono text-sm font-black tracking-wider text-emerald-600 sm:text-base dark:text-emerald-400">--:--:-- WITA</div>
                     <div id="live-date" class="text-[10px] font-semibold text-slate-500 sm:text-xs dark:text-slate-400">Memuat tanggal...</div>
                 </div>
             </div>

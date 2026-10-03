@@ -42,6 +42,23 @@ class DisplayStateTest extends TestCase
             ->assertJsonCount(2, 'waiting');
     }
 
+    public function test_display_state_clears_latest_when_the_only_called_queue_is_completed(): void
+    {
+        $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);
+
+        Queue::create([
+            'queue_number' => '001',
+            'meja_id' => $meja->id,
+            'status' => 'completed',
+            'called_at' => now()->subMinute(),
+            'completed_at' => now(),
+        ]);
+
+        $this->getJson(route('display.state'))
+            ->assertOk()
+            ->assertJsonPath('latest', null);
+    }
+
     public function test_queue_called_event_is_broadcast_immediately(): void
     {
         $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);

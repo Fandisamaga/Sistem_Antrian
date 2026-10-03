@@ -45,7 +45,7 @@
                     </div>
 
                     <!-- Giant Queue Number -->
-                    <div id="display-number" class="mt-3 font-black leading-none tracking-tight text-slate-900 drop-shadow-[0_20px_45px_rgba(37,99,235,0.3)] transition-all duration-300 dark:text-white dark:drop-shadow-[0_20px_45px_rgba(37,99,235,0.5)] text-[clamp(7.5rem,19vw,22rem)]">
+                    <div id="display-number" data-queue-id="{{ $latestQueue?->id }}" class="mt-3 font-black leading-none tracking-tight text-slate-900 drop-shadow-[0_20px_45px_rgba(37,99,235,0.3)] transition-all duration-300 dark:text-white dark:drop-shadow-[0_20px_45px_rgba(37,99,235,0.5)] text-[clamp(7.5rem,19vw,22rem)] min-[1600px]:text-[clamp(9rem,25vw,29rem)]">
                         {{ $latestQueue?->queue_number ?? '---' }}
                     </div>
 

@@ -53,7 +53,7 @@
                                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $queue->layanan->nama_layanan }}</span>
                                 @endif
                                 <span class="text-slate-400">&bull;</span>
-                                <span class="text-xs text-slate-400">{{ $queue->created_at->format('H:i') }} WIB</span>
+                                <span class="text-xs text-slate-400">{{ $queue->created_at->format('H:i') }} WITA</span>
                             </div>
                         </div>
 

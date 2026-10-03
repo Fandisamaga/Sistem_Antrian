@@ -1,4 +1,6 @@
 // --- Live Digital Clock & Date Engine ---
+const displayTimeZone = 'Asia/Makassar';
+
 export function startLiveClock() {
     const clockEl = document.querySelector('#live-clock');
     const dateEl = document.querySelector('#live-date');
@@ -7,13 +9,18 @@ export function startLiveClock() {
     function update() {
         const now = new Date();
         if (clockEl) {
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            clockEl.textContent = `${h}:${m}:${s} WIB`;
+            const time = new Intl.DateTimeFormat('id-ID', {
+                timeZone: displayTimeZone,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            }).format(now);
+            clockEl.textContent = `${time} WITA`;
         }
         if (dateEl) {
             dateEl.textContent = new Intl.DateTimeFormat('id-ID', {
+                timeZone: displayTimeZone,
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',

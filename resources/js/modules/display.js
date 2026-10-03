@@ -2,6 +2,7 @@ import {
     queueAnnouncement,
     isAnnouncing,
     announcementQueue,
+    removeAnnouncement,
     setOnAnnounce,
     setOnAudioStatus,
     prepareAudio,
@@ -36,6 +37,7 @@ export function updateDisplayBoard(queue) {
 
     if (numberEl) {
         numberEl.textContent = queue.queue_number;
+        numberEl.dataset.queueId = queue.id || queue.queue_id || '';
         numberEl.classList.remove('animate-call-pulse');
         void numberEl.offsetWidth;
         numberEl.classList.add('animate-call-pulse');
@@ -47,6 +49,27 @@ export function updateDisplayBoard(queue) {
 
     if (layananEl) {
         layananEl.textContent = serviceName;
+    }
+}
+
+// Kosongkan panggilan utama setelah operator menyelesaikan nomor yang tampil.
+export function clearDisplayBoard() {
+    const numberEl = document.querySelector('#display-number');
+    const mejaEl = document.querySelector('#display-meja');
+    const layananEl = document.querySelector('#display-layanan');
+
+    if (numberEl) {
+        numberEl.textContent = '---';
+        delete numberEl.dataset.queueId;
+        numberEl.classList.remove('animate-call-pulse');
+    }
+
+    if (mejaEl) {
+        mejaEl.textContent = 'MENUNGGU PANGGILAN';
+    }
+
+    if (layananEl) {
+        layananEl.textContent = '';
     }
 }
 
@@ -170,6 +193,8 @@ export async function refreshDisplay() {
             if (!isAnnouncing && announcementQueue.length === 0) {
                 updateDisplayBoard(state.latest);
             }
+        } else {
+            clearDisplayBoard();
         }
     } catch {
         // Fallback silently
@@ -218,7 +243,16 @@ export function initDisplay() {
             .listen('.QueueUpdated', (queue) => {
                 // Jika antrean dilewati atau selesai, hapus dari antrean menunggu
                 if (['skipped', 'completed'].includes(queue.status)) {
-                    removeWaitingQueue(queue.queue_id || queue.id);
+                    const queueId = queue.queue_id || queue.id;
+                    removeWaitingQueue(queueId);
+                    removeAnnouncement(queueId);
+
+                    // Hanya kosongkan panel utama bila nomor yang selesai
+                    // adalah nomor yang sedang ditampilkan.
+                    const displayedQueueId = document.querySelector('#display-number')?.dataset.queueId;
+                    if (String(displayedQueueId) === String(queueId)) {
+                        clearDisplayBoard();
+                    }
                 }
             });
     }
