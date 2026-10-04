@@ -39,13 +39,13 @@
 
                 <!-- Center: Giant Number & Desk -->
                 <div class="relative my-auto py-6 text-center">
-                    <div class="inline-flex items-center gap-2 text-xs font-black tracking-[0.3em] uppercase text-blue-600 dark:text-blue-300/90 sm:text-sm">
+                    <div class="inline-flex items-center gap-2 text-2xl font-black tracking-[0.3em] uppercase text-blue-600 dark:text-blue-300/90 sm:text-xl">
                         <svg class="h-4 w-4 text-blue-400 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                         NOMOR ANTREAN SAAT INI
                     </div>
 
                     <!-- Giant Queue Number -->
-                    <div id="display-number" data-queue-id="{{ $latestQueue?->id }}" class="mt-3 font-black leading-none tracking-tight text-slate-900 drop-shadow-[0_20px_45px_rgba(37,99,235,0.3)] transition-all duration-300 dark:text-white dark:drop-shadow-[0_20px_45px_rgba(37,99,235,0.5)] text-[clamp(7.5rem,19vw,22rem)] min-[1600px]:text-[clamp(9rem,25vw,29rem)]">
+                    <div id="display-number" data-queue-id="{{ $latestQueue?->id }}" class="mt-3 font-black leading-none tracking-tight text-slate-900 drop-shadow-[0_20px_45px_rgba(37,99,235,0.3)] transition-all duration-300 dark:text-white dark:drop-shadow-[0_20px_45px_rgba(37,99,235,0.5)] text-[clamp(9rem,25vw,29rem)]">
                         {{ $latestQueue?->queue_number ?? '---' }}
                     </div>
 
