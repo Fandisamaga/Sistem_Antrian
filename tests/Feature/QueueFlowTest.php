@@ -85,11 +85,13 @@ class QueueFlowTest extends TestCase
         $resPost->assertOk();
         $this->assertSame('called', $queue->fresh()->status);
         $this->assertSame($operator->id, $queue->fresh()->operator_id);
+        $this->assertSame(1, $queue->fresh()->call_version);
 
         // Replay via POST
         $resReplay = $this->actingAs($operator)
             ->postJson(route('operator.queues.update', $queue), ['action' => 'replay']);
         $resReplay->assertOk();
+        $this->assertSame(2, $queue->fresh()->call_version);
 
         Event::assertDispatched(QueueCalled::class, 2);
     }

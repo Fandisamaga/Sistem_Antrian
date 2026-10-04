@@ -52,8 +52,11 @@ class DisplayController extends Controller
                 $q->whereDate('created_at', $today)
                     ->orWhere('queue_date', $today);
             })
-            ->latest('called_at')
+            // `updated_at` berubah saat Panggil Ulang. Harus menjadi urutan
+            // utama agar polling tidak mengembalikan nomor yang sebelumnya
+            // dipanggil setelah sebuah nomor lama dipanggil ulang.
             ->latest('updated_at')
+            ->latest('called_at')
             ->first();
     }
 }

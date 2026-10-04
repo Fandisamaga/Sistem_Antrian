@@ -68,7 +68,7 @@ export function playChime() {
 
         const now = ctx.currentTime;
 
-        // Tone 1: High note (587.33Hz D5)
+        // Satu nada pembuka untuk setiap panggilan.
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = 'sine';
@@ -80,19 +80,7 @@ export function playChime() {
         osc1.start(now);
         osc1.stop(now + 0.45);
 
-        // Tone 2: Harmonic note (440.0Hz A4)
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(440.0, now + 0.28);
-        gain2.gain.setValueAtTime(0.35, now + 0.28);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(now + 0.28);
-        osc2.stop(now + 0.85);
-
-        return new Promise((resolve) => setTimeout(resolve, 850));
+        return new Promise((resolve) => setTimeout(resolve, 450));
     } catch {
         return Promise.resolve();
     }
@@ -143,7 +131,7 @@ export function speakText(message) {
             || voices.find((v) => v.lang?.toLowerCase().startsWith('id'));
 
         utterance.lang = 'id-ID';
-        utterance.rate = 0.78;
+        utterance.rate = 0.85;
         utterance.pitch = 0.92;
         utterance.volume = 1;
 
@@ -169,9 +157,39 @@ export let isAnnouncing = false;
 let onAnnounceHandler = null;
 let activeAnnouncementId = null;
 let announcementVersion = 0;
+let isWaitingForNextAnnouncement = false;
+const maxProcessedAnnouncementSignatures = 100;
 
 function queueIdOf(queue) {
     return queue?.queue_id ?? queue?.id;
+}
+
+function announcementSignatureOf(queue) {
+    return queue?.call_signature || `queue:${queueIdOf(queue)}`;
+}
+
+function processedAnnouncementSignatures() {
+    // Simpan di window agar satu versi panggilan tetap dikenali apabila
+    // modul JavaScript atau listener display diinisialisasi kembali.
+    const key = '__queueAnnouncementSignatures';
+    if (!window[key]) {
+        window[key] = new Set();
+    }
+
+    return window[key];
+}
+
+function hasProcessedAnnouncement(queue) {
+    const signature = announcementSignatureOf(queue);
+    const processed = processedAnnouncementSignatures();
+    if (processed.has(signature)) return true;
+
+    processed.add(signature);
+    if (processed.size > maxProcessedAnnouncementSignatures) {
+        processed.delete(processed.values().next().value);
+    }
+
+    return false;
 }
 
 export function setOnAnnounce(callback) {
@@ -218,7 +236,8 @@ export function removeAnnouncement(queueId) {
 }
 
 export async function processAnnouncementQueue() {
-    if (isAnnouncing || announcementQueue.length === 0) {
+    // FIFO tidak boleh dilompati, termasuk saat jeda antar-panggilan.
+    if (isAnnouncing || isWaitingForNextAnnouncement || announcementQueue.length === 0) {
         return;
     }
 
@@ -257,12 +276,23 @@ export async function processAnnouncementQueue() {
         isAnnouncing = false;
         updateNextCallBadge();
         if (announcementQueue.length > 0) {
-            setTimeout(processAnnouncementQueue, 400);
+            // Beri jeda agar nomor yang baru selesai dibacakan tetap terlihat
+            // sebelum panggilan FIFO berikutnya dimulai. Status ini menjaga
+            // agar event operator lain tidak memotong jeda tersebut.
+            isWaitingForNextAnnouncement = true;
+            setTimeout(() => {
+                isWaitingForNextAnnouncement = false;
+                processAnnouncementQueue();
+            }, 1000);
         }
     }
 }
 
 export function queueAnnouncement(queueData) {
+    // Pertahanan terakhir bila event yang sama sampai lebih dari sekali dari
+    // WebSocket, polling, atau reconnect browser.
+    if (hasProcessedAnnouncement(queueData)) return;
+
     announcementQueue.push(queueData);
     updateNextCallBadge();
     processAnnouncementQueue();

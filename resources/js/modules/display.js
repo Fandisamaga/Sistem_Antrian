@@ -1,7 +1,5 @@
 import {
     queueAnnouncement,
-    isAnnouncing,
-    announcementQueue,
     removeAnnouncement,
     setOnAnnounce,
     setOnAudioStatus,
@@ -10,12 +8,15 @@ import {
 
 // --- Display TV Engine (Daftar Seluruh Antrean Menunggu & Panggilan Utama) ---
 let lastAnnouncedCallSignature = null;
+let isDisplayInitialized = false;
 
-function announceCalledQueue(queue, force = false) {
+function announceCalledQueue(queue) {
     const queueId = queue?.queue_id || queue?.id;
     const callSignature = queue?.call_signature || String(queueId);
 
-    if (!queueId || (!force && callSignature === lastAnnouncedCallSignature)) {
+    // Satu aksi panggil memiliki signature yang sama pada event WebSocket
+    // dan polling. Abaikan salinan event agar suaranya hanya diputar sekali.
+    if (!queueId || callSignature === lastAnnouncedCallSignature) {
         return;
     }
 
@@ -77,7 +78,8 @@ export function updateDisplay(queue, shouldAnnounce = false) {
     if (!queue) return;
 
     if (shouldAnnounce) {
-        queueAnnouncement(queue);
+        // Semua jalur pengumuman wajib melewati deduplikasi yang sama.
+        announceCalledQueue(queue);
     } else {
         updateDisplayBoard(queue);
     }
@@ -189,10 +191,6 @@ export async function refreshDisplay() {
             // Cadangan apabila koneksi WebSocket display sedang terputus.
             // Panggilan baru tetap dibacakan pada siklus polling berikutnya.
             announceCalledQueue(state.latest);
-
-            if (!isAnnouncing && announcementQueue.length === 0) {
-                updateDisplayBoard(state.latest);
-            }
         } else {
             clearDisplayBoard();
         }
@@ -203,6 +201,9 @@ export async function refreshDisplay() {
 
 export function initDisplay() {
     if (!document.querySelector('#display-number')) return;
+    if (isDisplayInitialized) return;
+
+    isDisplayInitialized = true;
 
     const displayPanel = document.querySelector('#display-panel');
     lastAnnouncedCallSignature = displayPanel?.dataset.latestCallSignature || null;
@@ -233,12 +234,17 @@ export function initDisplay() {
                 const calledQueue = {
                     id: queue.queue_id || queue.id,
                     queue_number: queue.queue_number,
+                    // Samakan identitas event WebSocket dengan hasil polling.
+                    // Tanpa signature ini, polling berikutnya menganggap
+                    // panggilan yang sama sebagai panggilan baru dan audio
+                    // diputar dua kali.
+                    call_signature: queue.call_signature,
                     meja: queue.meja,
                     layanan: queue.layanan,
                 };
-                // `force` memastikan tombol Panggil Ulang untuk nomor yang
-                // sama tetap selalu dibacakan.
-                announceCalledQueue(calledQueue, true);
+                // Panggil ulang menghasilkan call_signature baru dari server,
+                // sehingga tetap dibacakan sekali tanpa memutar event duplikat.
+                announceCalledQueue(calledQueue);
             })
             .listen('.QueueUpdated', (queue) => {
                 // Jika antrean dilewati atau selesai, hapus dari antrean menunggu

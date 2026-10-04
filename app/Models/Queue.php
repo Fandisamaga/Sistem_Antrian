@@ -16,6 +16,7 @@ class Queue extends Model
         'layanan_id',
         'operator_id',
         'status',
+        'call_version',
         'called_at',
         'completed_at',
         'wait_duration',
@@ -76,6 +77,6 @@ class Queue extends Model
 
     public function getCallSignatureAttribute(): string
     {
-        return sprintf('%s:%s', $this->id, $this->updated_at?->getTimestamp() ?? 0);
+        return sprintf('%s:%s', $this->id, $this->call_version);
     }
 }

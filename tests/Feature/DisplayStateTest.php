@@ -59,6 +59,43 @@ class DisplayStateTest extends TestCase
             ->assertJsonPath('latest', null);
     }
 
+    public function test_display_state_keeps_a_replayed_queue_as_the_latest_call(): void
+    {
+        $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);
+        $replayAt = now()->startOfSecond();
+
+        $olderCall = Queue::create([
+            'queue_number' => '001',
+            'meja_id' => $meja->id,
+            'status' => 'called',
+            'called_at' => $replayAt->copy()->subMinutes(5),
+        ]);
+        $olderCall->forceFill([
+            'created_at' => $replayAt->copy()->subMinutes(5),
+            'updated_at' => $replayAt->copy()->subMinutes(5),
+        ])->saveQuietly();
+
+        $newerCall = Queue::create([
+            'queue_number' => '002',
+            'meja_id' => $meja->id,
+            'status' => 'called',
+            'called_at' => $replayAt->copy()->subMinute(),
+        ]);
+        $newerCall->forceFill([
+            'created_at' => $replayAt->copy()->subMinute(),
+            'updated_at' => $replayAt->copy()->subMinute(),
+        ])->saveQuietly();
+
+        // Panggil ulang nomor lama memperbarui waktu aksinya, tetapi tidak
+        // mengubah called_at yang merupakan waktu panggilan pertamanya.
+        $olderCall->forceFill(['updated_at' => $replayAt])->saveQuietly();
+
+        $this->getJson(route('display.state'))
+            ->assertOk()
+            ->assertJsonPath('latest.id', $olderCall->id)
+            ->assertJsonMissing(['latest' => ['id' => $newerCall->id]]);
+    }
+
     public function test_queue_called_event_is_broadcast_immediately(): void
     {
         $meja = Meja::create(['nomor_meja' => 1, 'nama_meja' => 'Meja 01']);

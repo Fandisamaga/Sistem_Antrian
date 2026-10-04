@@ -60,7 +60,7 @@ function upsertQueue(data) {
             <p class="text-4xl font-black tracking-tight text-slate-900 dark:text-white">${data.queue_number}</p>
             <div class="mt-1 flex items-center gap-2">
                 <span class="queue-status text-xs font-black tracking-widest uppercase text-blue-600 dark:text-blue-300">${data.status}</span>
-                ${data.layanan ? `<span class="text-slate-400">&bull;</span><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${typeof data.layanan === 'object' ? (data.layanan.nama_layanan || '') : data.layanan}</span>` : ''}
+                ${data.layanan ? `<span class="text-slate-400">&bull;</span><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${typeof data.layanan === 'object' ? (data.layanan.nama_layanan || '') : data.layanan}</span>` : ''}     
                 <span class="text-slate-400">&bull;</span>
                 <span class="text-xs text-slate-400">${data.created_at || ''} WITA</span>
             </div>

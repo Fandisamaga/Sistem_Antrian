@@ -16,9 +16,6 @@
                         <h1 class="mt-2 text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl">
                             {{ $meja->nama_meja }}
                         </h1>
-                        <p class="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                            Layanan: {{ $meja->layanan?->nama_layanan ?? 'Pelayanan Umum' }}
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -48,10 +45,6 @@
                             <p class="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{{ $queue->queue_number }}</p>
                             <div class="mt-1 flex items-center gap-2">
                                 <span class="queue-status text-xs font-black tracking-widest uppercase text-blue-600 dark:text-blue-300">{{ $queue->status }}</span>
-                                @if($queue->layanan)
-                                    <span class="text-slate-400">&bull;</span>
-                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $queue->layanan->nama_layanan }}</span>
-                                @endif
                                 <span class="text-slate-400">&bull;</span>
                                 <span class="text-xs text-slate-400">{{ $queue->created_at->format('H:i') }} WITA</span>
                             </div>

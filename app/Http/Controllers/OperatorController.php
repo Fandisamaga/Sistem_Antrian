@@ -9,6 +9,7 @@ use App\Models\Queue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class OperatorController extends Controller
 {
@@ -76,6 +77,8 @@ class OperatorController extends Controller
                     'operator_id' => $user->id,
                     'called_at' => $now,
                     'wait_duration' => $waitDuration,
+                    'call_version' => DB::raw('call_version + 1'),
+                    'updated_at' => $now,
                 ]);
 
             abort_if($affected === 0, 409, 'Status antrean sudah berubah. Muat ulang halaman lalu coba lagi.');
@@ -90,9 +93,17 @@ class OperatorController extends Controller
         }
 
         if ($action === 'replay') {
-            // Simpan versi panggilan terakhir agar polling display juga dapat
-            // mendeteksi panggil ulang bila koneksi WebSocket sempat putus.
-            $queue->touch();
+            // Setiap panggil ulang punya versi unik. Dengan demikian event
+            // WebSocket dan polling untuk aksi yang sama bisa dikenali sebagai
+            // satu panggilan, tanpa bergantung pada presisi timestamp.
+            $affected = Queue::where('id', $queue->id)
+                ->where('status', 'called')
+                ->update([
+                    'call_version' => DB::raw('call_version + 1'),
+                    'updated_at' => $now,
+                ]);
+
+            abort_if($affected === 0, 409, 'Status antrean sudah berubah. Muat ulang halaman lalu coba lagi.');
 
             try {
                 event(new QueueCalled($queue->fresh(['meja', 'layanan'])));
